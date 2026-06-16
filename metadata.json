@@ -1,0 +1,6 @@
+{
+  "name": "homework-summary",
+  "description": "ระบบสรุปและติดตามการบ้านและนัดหมายการสอบ เชื่อมต่อระบบฐานข้อมูล Firebase",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

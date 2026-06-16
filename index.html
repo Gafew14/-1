@@ -1,0 +1,1672 @@
+<!doctype html>
+<html lang="th">
+ <head>
+  <script src="/_sdk/telemetry_sdk.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>สรุปการบ้าน</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/editing_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Thai:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --ink:#19324f;
+      --muted:#6f86a0;
+      --line:#dce9f5;
+      --blue:#2b7de9;
+      --blue-deep:#1457b5;
+      --soft-blue:#edf7ff;
+      --paper:#ffffff;
+      --mint:#e8f8f0;
+      --amber:#fff6df;
+      --rose:#fff0f0;
+      --violet:#f4f0ff;
+      --violet-ink:#7965d4;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-width:320px;
+      font-family:'Noto Sans Thai','DM Sans',sans-serif;
+      color:var(--ink);
+    }
+    .app-shell{
+      width:100%;
+      min-height:100vh;
+      background:
+        linear-gradient(rgba(255,255,255,.91), rgba(255,255,255,.91)),
+        linear-gradient(90deg, rgba(43,125,233,.05) 1px, transparent 1px),
+        linear-gradient(rgba(43,125,233,.05) 1px, transparent 1px);
+      background-size:auto,28px 28px,28px 28px;
+    }
+    .glass-card{
+      background:rgba(255,255,255,.95);
+      border:1px solid rgba(220,233,245,.92);
+      box-shadow:0 12px 30px rgba(43,91,140,.06);
+    }
+    .day-card{
+      transition:.22s ease;
+      border:1px solid #dbe8f5;
+    }
+    .day-card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 10px 22px rgba(43,91,140,.10);
+    }
+    .day-card.active{
+      background:#2b7de9;
+      border-color:#2b7de9;
+      color:#fff;
+      box-shadow:0 12px 24px rgba(43,125,233,.24);
+    }
+    .day-card.active .day-muted{color:rgba(255,255,255,.78)}
+    .homework-card{transition:.22s ease}
+    .homework-card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 16px 30px rgba(43,91,140,.10);
+    }
+    .focus-ring:focus-visible{
+      outline:3px solid rgba(43,125,233,.25);
+      outline-offset:2px;
+    }
+    .modal-backdrop{
+      background:rgba(18,41,70,.38);
+      backdrop-filter:blur(4px);
+    }
+    .toast{transition:.25s ease}
+    .toast.hidden-toast{
+      opacity:0;
+      transform:translateY(10px);
+      pointer-events:none;
+    }
+    .fade-in{animation:fadeIn .35s ease both}
+    @keyframes fadeIn{
+      from{opacity:0;transform:translateY(7px)}
+      to{opacity:1;transform:translateY(0)}
+    }
+    .tab-btn{
+      transition:.2s ease;
+      color:#6b8199;
+    }
+    .tab-btn.active{
+      color:#1457b5;
+      background:#edf7ff;
+      box-shadow:inset 0 0 0 1px #cfe4fb;
+    }
+    .tab-btn.exam.active{
+      color:#6b57c9;
+      background:#f4f0ff;
+      box-shadow:inset 0 0 0 1px #ded5ff;
+    }
+    .toggle-complete{
+      color:#6b8199;
+      background:transparent;
+    }
+    .toggle-complete.completed{
+      color:#10b981;
+      background:#d1fae5;
+    }
+  </style>
+  <script src="/_sdk/resizing_sdk.js" type="text/javascript"></script>
+ </head>
+ <body data-template-id="__page-root">
+  <div class="app-shell flex flex-col min-h-screen">
+   <!-- Header -->
+   <header class="w-full border-b border-sky-100 bg-white/85 backdrop-blur-sm sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+     <div class="flex items-center gap-3">
+      <img data-template-id="app-logo" loading="lazy" class="canva-image w-12 h-12 rounded-2xl shadow-lg shadow-blue-200 object-cover" src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=120" alt="App Logo">
+      <div>
+       <h1 data-template-id="header-title" class="canva-text text-xl sm:text-2xl font-bold text-slate-800 leading-tight">สรุปการบ้าน</h1>
+       <p data-template-id="header-subtitle" class="canva-text mt-0.5 text-xs sm:text-sm text-slate-500">ระบบสรุปความคืบหน้ารายสัปดาห์และตัวช่วยจัดแจงนัดสอบ</p>
+      </div>
+     </div>
+     <div class="flex items-center gap-3 flex-1 md:flex-none md:w-auto">
+      <div class="relative flex-1 md:flex-none">
+        <input id="globalSearchInput" type="text" data-template-id="global-search-input" placeholder="ค้นหาวิชา, ชื่อการบ้าน, คุณครู..." class="focus-ring w-full md:w-64 rounded-2xl border border-sky-100 bg-sky-50 pl-4 pr-10 py-2.5 text-sm outline-none text-slate-700" aria-label="ค้นหารายการทั้งหมด">
+        <span class="absolute right-3.5 top-3 text-slate-400">
+          <i data-lucide="search" class="w-4 h-4"></i>
+        </span>
+      </div>
+      <button id="openModalBtn" data-template-id="add-homework-button" class="canva-button focus-ring inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl font-semibold bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-100 hover:-translate-y-0.5 transition shrink-0 text-sm" type="button">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        <span>เพิ่มวิชา/งานสอบ</span>
+      </button>
+     </div>
+    </div>
+   </header>
+
+   <!-- Main Content Workspace -->
+   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+    <!-- Stat Summary cards -->
+    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6" aria-label="สรุปภาพรวมทั้งหมด">
+     <article data-template-id="summary-week-card" id="weekCardBtn" class="canva-card glass-card rounded-3xl p-4.5 cursor-pointer hover:bg-slate-50 transition">
+      <div class="flex items-start justify-between">
+       <div>
+        <p data-template-id="summary-week-label" class="canva-text text-xs font-semibold text-slate-500">การบ้านไม่เลยกำหนด</p>
+        <p id="weekCount" class="text-2xl sm:text-3xl font-bold mt-1 text-slate-800">0</p>
+       </div>
+       <div class="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+         <i data-lucide="calendar-days" class="w-5 h-5"></i>
+       </div>
+      </div>
+     </article>
+
+     <article data-template-id="summary-today-card" id="todayCardBtn" class="canva-card glass-card rounded-3xl p-4.5 cursor-pointer hover:bg-slate-50 transition">
+      <div class="flex items-start justify-between">
+       <div>
+        <p data-template-id="summary-today-label" class="canva-text text-xs font-semibold text-slate-500">ต้องส่งวันนี้</p>
+        <p id="todayCount" class="text-2xl sm:text-3xl font-bold mt-1 text-slate-800">0</p>
+       </div>
+       <div class="w-10 h-10 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+         <i data-lucide="sun" class="w-5 h-5"></i>
+       </div>
+      </div>
+     </article>
+
+     <article data-template-id="summary-upcoming-card" id="upcomingCardBtn" class="canva-card glass-card rounded-3xl p-4.5 cursor-pointer hover:bg-slate-50 transition">
+      <div class="flex items-start justify-between">
+       <div>
+        <p data-template-id="summary-upcoming-label" class="canva-text text-xs font-semibold text-slate-500">ใกล้ส่ง (1-3 วัน)</p>
+        <p id="upcomingCount" class="text-2xl sm:text-3xl font-bold mt-1 text-amber-500">0</p>
+       </div>
+       <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0">
+         <i data-lucide="alarm-clock" class="w-5 h-5"></i>
+       </div>
+      </div>
+     </article>
+
+     <article data-template-id="summary-overdue-card" id="overdueCardBtn" class="canva-card glass-card rounded-3xl p-4.5 border-rose-100/80 cursor-pointer bg-rose-50/10 hover:bg-rose-50/35 transition">
+      <div class="flex items-start justify-between">
+       <div>
+        <p data-template-id="summary-overdue-label" class="canva-text text-xs font-semibold text-slate-500">เลยกำหนดส่ง</p>
+        <p id="overdueCount" class="text-2xl sm:text-3xl font-bold mt-1 text-rose-500">0</p>
+       </div>
+       <div class="w-10 h-10 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
+         <i data-lucide="circle-alert" class="w-5 h-5"></i>
+       </div>
+      </div>
+     </article>
+
+     <article data-template-id="summary-exam-card" id="examCardBtn" class="canva-card glass-card rounded-3xl p-4.5 cursor-pointer hover:bg-slate-50 transition">
+      <div class="flex items-start justify-between">
+       <div>
+        <p data-template-id="summary-exam-label" class="canva-text text-xs font-semibold text-slate-500">นัดสอบทั้งหมด</p>
+        <p id="examCount" class="text-2xl sm:text-3xl font-bold mt-1 text-violet-600">0</p>
+       </div>
+       <div class="w-10 h-10 rounded-2xl bg-violet-50 text-violet-500 flex items-center justify-center shrink-0">
+         <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+       </div>
+      </div>
+     </article>
+
+     <article data-template-id="summary-grand-card" id="grandCardBtn" class="canva-card glass-card rounded-3xl p-4.5 bg-gradient-to-br from-emerald-50/50 to-teal-50/20 border-emerald-100/50 cursor-pointer hover:scale-[1.02] hover:shadow-md transition duration-200">
+      <div class="flex items-start justify-between">
+       <div>
+        <p data-template-id="summary-grand-label" class="canva-text text-[11px] font-bold text-slate-600">รวมงาน & สอบทั้งหมด</p>
+        <p id="grandTotalCount" class="text-2xl sm:text-3xl font-extrabold mt-1 text-emerald-600">0</p>
+       </div>
+       <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 shadow-sm shadow-emerald-100">
+         <i data-lucide="pie-chart" class="w-5 h-5"></i>
+       </div>
+      </div>
+     </article>
+    </section>
+
+    <!-- Week Stripe panel -->
+    <section class="glass-card rounded-[1.7rem] p-5 mb-6">
+     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+      <div>
+       <h2 data-template-id="week-heading" class="canva-text font-bold text-slate-800 text-lg">ปฏิทินรายสัปดาห์</h2>
+       <p data-template-id="week-subheading" class="canva-text text-xs sm:text-sm text-slate-500 mt-0.5">เลือกวันที่แสดงนัดสอบและการบ้านประจำสัปดาห์</p>
+      </div>
+      <div class="flex items-center gap-2">
+       <button id="prevWeekBtn" type="button" class="focus-ring w-9 h-9 rounded-xl border border-slate-200 hover:bg-slate-100 active:bg-slate-200 transition flex items-center justify-center text-slate-500 shrink-0" aria-label="สัปดาห์ก่อนหน้า">
+         <i data-lucide="chevron-left" class="w-5 h-5"></i>
+       </button>
+       <div class="flex items-center gap-1.5 text-xs sm:text-sm text-slate-600 font-medium px-3 bg-slate-50 rounded-xl py-2 border border-slate-100 min-w-max">
+         <i data-lucide="calendar-range" class="w-4 h-4 text-blue-500"></i>
+         <span id="weekRange"></span>
+       </div>
+       <button id="nextWeekBtn" type="button" class="focus-ring w-9 h-9 rounded-xl border border-slate-200 hover:bg-slate-100 active:bg-slate-200 transition flex items-center justify-center text-slate-500 shrink-0" aria-label="สัปดาห์ถัดไป">
+         <i data-lucide="chevron-right" class="w-5 h-5"></i>
+       </button>
+      </div>
+     </div>
+     <div id="weekStrip" class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3"></div>
+    </section>
+
+    <!-- Beautiful Subscription & Community Notification Panel -->
+    <section class="glass-card rounded-[1.7rem] p-5 mb-6 bg-gradient-to-r from-sky-50 to-blue-50/20 border border-sky-100/80 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+     <div class="flex items-start gap-4">
+       <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-blue-100">
+         <i data-lucide="bell" class="w-5.5 h-5.5" id="bellIcon"></i>
+       </div>
+       <div class="flex-1">
+         <h2 class="canva-text font-bold text-slate-800 text-base flex flex-wrap items-center gap-2">
+           🔔 ส่งแจ้งเตือนการบ้านใหม่ให้เพื่อนๆ ทุกคนที่มาใช้แอป
+           <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800">แนะนำ</span>
+         </h2>
+         <p class="canva-text text-xs sm:text-sm text-slate-500 mt-1 max-w-2xl leading-relaxed">
+           กรอกอีเมลของคุณเพื่อลงทะเบียนติดตามข่าวสาร เมื่อใดที่มีเพื่อนแอดสรุปการบ้านหรือตารางจัดสอบ ระบบจะส่งรายละเอียดไปยังอีเมลทั้งหมดในกลุ่มโดยอัตโนมัติ!
+         </p>
+         <div class="mt-2.5 flex flex-wrap items-center gap-2">
+           <div id="subscribersCount" class="text-xs text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-1 rounded-xl font-semibold inline-flex items-center gap-1">
+             <i data-lucide="users" class="w-3.5 h-3.5"></i>
+             <span id="subscribersCountText">👥 กำลังเชื่อมต่อข้อมูล...</span>
+           </div>
+           <div id="smtpStatusLabel" class="text-[11px] text-slate-500 bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-xl inline-flex items-center gap-1 font-medium">
+             <i data-lucide="mail-check" class="w-3.5 h-3.5 text-green-500"></i>
+             <span>ระบบจำลองส่งเมลทาง Console (หากใส่ SMTP ใน Secrets จะส่งจดหมายจริงทันที)</span>
+           </div>
+         </div>
+       </div>
+     </div>
+     
+     <!-- Subscribed States dynamic input card -->
+     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 w-full lg:w-auto">
+       <div class="relative flex-1 sm:flex-initial">
+         <input id="subEmailInput" type="email" placeholder="กรอกอีเมลของคุณ (เช่น name@domain.com)" class="focus-ring w-full sm:w-64 rounded-xl border border-sky-100 bg-white px-4 py-2.5 text-xs sm:text-sm outline-none text-slate-700 font-semibold placeholder-slate-400">
+       </div>
+       <button id="subBtn" class="canva-button focus-ring px-5 py-2.5 rounded-xl font-bold bg-slate-800 hover:bg-slate-900 text-white shadow-md transition text-xs sm:text-sm inline-flex items-center justify-center gap-2 shrink-0" type="button"><span id="subSpinner" class="w-4 h-4 rounded-full border-2 border-slate-300 border-t-slate-600 animate-spin hidden"></span>
+         <i data-lucide="check-circle" class="w-4 h-4 hidden" id="subCheckIcon"></i>
+         <span id="subBtnLabel">กดติดตามแจ้งเตือน</span>
+       </button>
+     </div>
+    </section>
+
+    <!-- Upcoming Tasks Alert Banner -->
+    <section id="upcomingAlertBanner" class="hidden mb-6 bg-gradient-to-br from-rose-50/60 to-amber-50/40 rounded-[1.7rem] p-5 border border-rose-100/75 shadow-sm shadow-rose-50/20">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-start gap-4 flex-1">
+          <div class="w-11 h-11 rounded-2xl bg-rose-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-rose-100 animate-pulse">
+            <i data-lucide="alert-triangle" class="w-5.5 h-5.5"></i>
+          </div>
+          <div class="flex-1">
+            <h3 class="canva-text font-bold text-slate-800 text-base flex flex-wrap items-center gap-2">
+              🚨 มีงานหรือวันสอบใกล้เข้ามาแล้ว! (<span id="upcomingBannerCount">0</span> รายการ)
+            </h3>
+            <p class="canva-text text-xs sm:text-sm text-slate-600 mt-1 max-w-xl leading-relaxed">
+              ตารางวิชาเรียนและการสอบสรุปด้านล่างเหลือเวลากำหนดส่งภายใน 0-3 วันนี้ กรุณาติดตามส่งงานให้เสร็จสมบูรณ์
+            </p>
+            <div id="upcomingTasksList" class="flex flex-wrap gap-2 mt-2.5">
+              <!-- Dynamically populated tags with task titles -->
+            </div>
+          </div>
+        </div>
+        
+        <button id="upcomingNotifyBtn" class="canva-button focus-ring px-5 py-2.5 rounded-xl font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-md transition text-xs sm:text-sm inline-flex items-center justify-center gap-2 shrink-0 self-start md:self-center" type="button">
+          <span id="upcomingNotifySpinner" class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin hidden"></span>
+          <i data-lucide="mail" class="w-4 h-4 text-white animate-bounce"></i>
+          <span>ส่งอีเมลเตือนภารกิจกลุ่ม</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Detailed List View -->
+    <section>
+     <div class="flex flex-col gap-4 mb-5">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+       <div class="flex-1">
+        <h2 data-template-id="day-heading" class="canva-text font-bold text-lg text-slate-800">รายการวิชาที่ค้างส่ง / มีปฏิทินสอบ</h2>
+        <p id="selectedDateText" data-template-id="day-subheading" class="canva-text text-sm mt-0.5 text-slate-500"></p>
+       </div>
+       <div class="flex flex-row items-center sm:items-end justify-between sm:justify-start sm:flex-col gap-2 shrink-0">
+        <p id="itemCountText" class="text-sm text-slate-500 font-semibold bg-sky-50 border border-sky-100 px-3 py-1 rounded-xl">0 รายการ</p>
+        <p id="personalStatsText" class="text-xs text-green-600 bg-green-50 border border-green-100 px-3 py-1 rounded-xl font-medium hidden">ส่งแล้ว 0 งาน</p>
+       </div>
+      </div>
+
+      <!-- Action Tabs and Filters -->
+      <div class="flex flex-wrap gap-1.5 self-start p-1.5 rounded-2xl bg-slate-50/80 border border-slate-200">
+        <button id="allTab" type="button" class="tab-btn active focus-ring rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5">
+          <i data-lucide="list" class="w-4 h-4"></i>
+          <span data-template-id="all-tab-label" class="canva-text">ทั้งหมด</span>
+        </button>
+        <button id="homeworkTab" type="button" class="tab-btn focus-ring rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5">
+          <i data-lucide="book-open-check" class="w-4 h-4"></i>
+          <span data-template-id="homework-tab-label" class="canva-text">การบ้านเฉพาะวัน</span>
+        </button>
+        <button id="examTab" type="button" class="tab-btn exam focus-ring rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5">
+          <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+          <span data-template-id="exam-tab-label" class="canva-text">นัดสอบเฉพาะวัน</span>
+        </button>
+        <button id="noDueTab" type="button" class="tab-btn focus-ring rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5">
+          <i data-lucide="circle-help" class="w-4 h-4"></i>
+          <span data-template-id="no-due-tab-label" class="canva-text">ไม่มีกำหนดส่ง</span>
+        </button>
+        <button id="archiveTab" type="button" class="tab-btn focus-ring rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5">
+          <i data-lucide="archive" class="w-4 h-4"></i>
+          <span data-template-id="archive-tab-label" class="canva-text">ประวัติผู้ใช้งาน</span>
+        </button>
+      </div>
+     </div>
+
+     <div id="currentView">
+      <div id="homeworkList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"></div>
+      <div id="emptyState" class="hidden py-16 text-center bg-white border border-slate-100 rounded-3xl shadow-sm">
+       <div id="emptyIconWrap" class="mx-auto w-16 h-16 rounded-3xl bg-blue-50 text-blue-500 flex items-center justify-center mb-4">
+         <i id="emptyIcon" data-lucide="calendar-check-2" class="w-7 h-7"></i>
+       </div>
+       <h3 data-template-id="empty-title" class="canva-text text-lg font-semibold text-slate-800">ไม่มีรายการใดๆ</h3>
+       <p data-template-id="empty-description" class="canva-text mt-2 text-sm max-w-sm mx-auto text-slate-400">ยังไม่มีประวัติการส่งการบ้านหรือข่าวจัดตารางนัดสอบในส่วนการคัดเลือกนี้</p>
+      </div>
+     </div>
+
+     <!-- Archive View Section -->
+     <div id="archiveView" class="hidden">
+      <div class="mb-4">
+       <h2 data-template-id="archive-section-heading" class="canva-text font-bold text-lg text-slate-800">ประวัติและคลังรวมการบ้าน</h2>
+       <p data-template-id="archive-section-subheading" class="canva-text text-sm mt-0.5 text-slate-500">แสดงรายการทีมีการแจ้งส่งแล้ว หรือ เลยกำหนดการส่งการบ้านเดิม</p>
+      </div>
+      <div id="archiveList" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"></div>
+      <div id="archiveEmptyState" class="hidden py-16 text-center bg-white border border-slate-100 rounded-3xl shadow-sm">
+       <div class="mx-auto w-16 h-16 rounded-3xl bg-slate-100 text-slate-400 flex items-center justify-center mb-4">
+         <i data-lucide="archive" class="w-7 h-7"></i>
+       </div>
+       <h3 class="text-lg font-semibold text-slate-600">ยังไม่มีข้อมูลการส่งประวัติเลย</h3>
+       <p class="mt-2 text-sm text-slate-500 max-w-sm mx-auto">เมื่องานที่ท่านได้รับมอบหมายถูกสร้างและตรวจเสร็จเรียบร้อย จะมาปรากฎที่หน้านี้</p>
+      </div>
+     </div>
+    </section>
+   </main>
+
+   <!-- Minimal Footer -->
+   <footer class="w-full border-t border-slate-100 bg-white py-5 text-center mt-12 bg-white/70">
+     <p class="text-xs text-slate-400 leading-snug">
+       สรุปการบ้าน &bull; ร่วมมือแบ่งปันตารางการศึกษา ทำงานแบบเรียลไทม์ผ่าน Firebase
+     </p>
+   </footer>
+  </div>
+
+  <!-- Dynamic card component content -->
+  <template id="homeworkTemplate">
+   <article data-template-id="homework-card" class="canva-card homework-card fade-in rounded-3xl border border-sky-100 bg-white flex flex-col justify-between shadow-sm hover:shadow-md transition relative overflow-hidden min-h-[300px]">
+    
+    <!-- Dynamic Status Bar -->
+    <div class="status-bar hidden px-5 py-3 text-xs font-semibold border-b"></div>
+
+    <div class="p-5 flex-1 flex flex-col justify-between">
+      <!-- Badge & Management Row -->
+      <div class="flex items-center justify-between gap-3 mb-4 relative z-10 w-full">
+        <span data-template-id="homework-badge" class="canva-tag inline-flex rounded-full px-3 py-1 text-xs font-semibold">การบ้าน</span>
+        
+        <!-- Management buttons -->
+        <div class="flex items-center gap-1.5">
+          <button data-template-id="homework-edit-button" class="canva-button edit-btn focus-ring w-9 h-9 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition flex items-center justify-center" type="button" aria-label="แก้ไขข้อมูล">
+            <i data-lucide="pencil" class="w-4.5 h-4.5"></i>
+          </button>
+          <button data-template-id="homework-delete-button" class="canva-button delete-btn focus-ring w-9 h-9 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition flex items-center justify-center" type="button" aria-label="ลบข้อมูล">
+            <i data-lucide="trash-2" class="w-4.5 h-4.5"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="flex-1 mt-1">
+        <h3 data-template-id="homework-title" class="canva-text text-lg font-bold leading-snug text-slate-800"></h3>
+        <div class="flex items-center gap-2 mt-1.5">
+          <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+          <p data-template-id="homework-subject" class="canva-text text-sm font-semibold text-slate-600"></p>
+        </div>
+        <p data-template-id="homework-teacher" class="canva-text text-xs text-slate-500 mt-0.5 font-medium"></p>
+        <p data-template-id="homework-description" class="canva-text mt-3 text-sm text-slate-400 leading-relaxed max-h-24 overflow-y-auto whitespace-pre-wrap"></p>
+      </div>
+
+      <div class="mt-5 pt-4 border-t border-sky-100 flex flex-col gap-3">
+       <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="date-icon w-8 h-8 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+            <i data-lucide="book-open" class="w-4 h-4"></i>
+          </div>
+          <div class="min-w-0 leading-tight">
+            <p data-template-id="homework-date" class="canva-text text-xs text-slate-600 font-semibold truncate"></p>
+            <p data-template-id="homework-days-left" class="canva-text text-[11px] text-slate-400 truncate mt-0.5"></p>
+          </div>
+        </div>
+        <span data-template-id="homework-status" class="canva-tag text-xs font-bold px-2.5 py-1 rounded-full bg-slate-50 text-slate-500">ตามแผน</span>
+       </div>
+
+       <!-- Completion check segment -->
+       <div class="completion-section hidden flex items-center justify-between pt-2 border-t border-dashed border-slate-100">
+        <button data-template-id="homework-toggle-complete" class="canva-button toggle-complete focus-ring w-9 h-9 border border-slate-200 rounded-xl flex items-center justify-center hover:bg-slate-50 transition shrink-0" type="button" aria-label="ทำเครื่องหมายเสร็จสิ้น">
+          <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+        </button>
+        <div data-template-id="my-status-section" class="hidden text-right leading-none shrink-0">
+         <p data-template-id="my-completion-label" class="canva-text text-xs font-bold text-green-600 leading-none">✅ คุณส่งแล้ว</p>
+        </div>
+       </div>
+      </div>
+    </div>
+   </article>
+  </template>
+
+  <!-- Add/Edit Modal -->
+  <div id="modal" class="fixed inset-0 z-50 hidden flex items-center justify-center">
+   <div class="modal-backdrop absolute inset-0"></div>
+   <div class="relative w-full max-w-2xl m-4 rounded-[1.7rem] bg-white shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-scale-up">
+    <div class="px-6 py-5 border-b border-sky-100 flex items-center justify-between bg-slate-50/50">
+     <div>
+      <h2 id="modalTitleAdd" data-template-id="modal-title-add" class="canva-text font-bold text-lg sm:text-xl text-slate-800">เพิ่มวิชาสำหรับการเรียนการสอน</h2>
+      <h2 id="modalTitleEdit" data-template-id="modal-title-edit" class="canva-text font-bold text-lg sm:text-xl text-slate-800 hidden">แก้ไขวิชาและตารางงานเรียน</h2>
+     </div>
+     <button id="closeModalBtn" type="button" class="focus-ring w-10 h-10 rounded-xl border border-slate-200 hover:bg-slate-100 active:bg-slate-200 transition flex items-center justify-center text-slate-500 shrink-0" aria-label="ปิดหน้าต่าง">
+       <i data-lucide="x" class="w-5 h-5"></i>
+     </button>
+    </div>
+    
+    <form id="homeworkForm" class="p-6 space-y-4.5 overflow-y-auto flex-1">
+     <div>
+       <label data-template-id="form-title-label" class="canva-text block text-sm font-semibold mb-2 text-slate-700" for="titleInput">หัวข้อการศึกษา / ชื่องานการบ้าน *</label>
+       <input id="titleInput" required placeholder="เช่น ส่งบทความบทที่ 1, อ่านเพิ่มเติมหัวข้อสอบคณิตศาสตร์ ฯลฯ" class="focus-ring w-full rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 outline-none text-slate-700" type="text" autocomplete="off">
+     </div>
+
+     <div>
+       <label data-template-id="form-description-label" class="canva-text block text-sm font-semibold mb-2 text-slate-700" for="descriptionInput">คำอธิบายรายละเอียดงาน</label>
+       <textarea id="descriptionInput" placeholder="อธิบายรายละเอียดงาน, หน้าหนังสือพิมพ์, ลิงก์แนบ, วิธีทํากลุ่มย่อย ฯลฯ" rows="3" class="focus-ring w-full rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 outline-none resize-none text-slate-700"></textarea>
+     </div>
+
+     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+       <div>
+         <label data-template-id="form-type-label" class="canva-text block text-sm font-semibold mb-2 text-slate-700" for="typeInput">ประเภทความสำคัญ</label>
+         <select id="typeInput" class="focus-ring w-full rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 outline-none text-slate-700 cursor-pointer">
+           <option value="homework">📝 การบ้านค้างส่ง</option>
+           <option value="exam">📅 ปฏิทินและจัดสอบ</option>
+         </select>
+       </div>
+
+       <div>
+         <label data-template-id="form-subject-label" class="canva-text block text-sm font-semibold mb-2 text-slate-700" for="subjectInput">วิชาเรียน</label>
+         <input id="subjectInput" placeholder="พิมพ์ชื่อวิชา เช่น คณิตศาสตร์, วิทยาศาสตร์" class="focus-ring w-full rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 outline-none text-slate-700" type="text" list="subjectList" autocomplete="off">
+         <datalist id="subjectList"></datalist>
+       </div>
+     </div>
+
+     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+       <div>
+         <label data-template-id="form-teacher-label" class="canva-text block text-sm font-semibold mb-2 text-slate-700" for="teacherInput">คุณครูผู้สอน</label>
+         <input id="teacherInput" placeholder="ครูผู้จัดสอบ/สั่งการบ้าน" class="focus-ring w-full rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 outline-none text-slate-700" type="text" list="teacherList" autocomplete="off">
+         <datalist id="teacherList"></datalist>
+       </div>
+
+       <div>
+         <label data-template-id="form-assigned-label" class="canva-text block text-sm font-semibold mb-2 text-slate-700" for="assignedInput">วันที่มอบงาน</label>
+         <input id="assignedInput" class="focus-ring w-full rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 outline-none text-slate-700 cursor-pointer" type="date">
+       </div>
+
+       <div>
+         <label data-template-id="form-due-label" class="canva-text block text-sm font-semibold mb-2 text-slate-700" for="dueInput">วันกำหนดส่ง / วันจัดสอบ *</label>
+         <input id="dueInput" class="focus-ring w-full rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 outline-none text-slate-700 cursor-pointer" type="date">
+       </div>
+     </div>
+
+     <p id="formError" class="hidden text-sm text-rose-600 font-semibold"></p>
+     <p id="limitMessage" data-template-id="limit-message" class="canva-text hidden text-sm text-amber-600">จำกัดจำนวนสูงสุด 999 รายการเท่านั้น</p>
+
+     <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+      <button id="cancelBtn" data-template-id="cancel-button" class="canva-button focus-ring px-5 py-3 rounded-2xl font-semibold border border-slate-200 hover:bg-slate-50 transition text-slate-600" type="button">ยกเลิก</button>
+      <button id="saveBtn" data-template-id="save-button" class="canva-button focus-ring px-5 py-3 rounded-2xl font-semibold inline-flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-100 transition shrink-0" type="submit">
+        <span class="save-label">บันทึกวิชาเรียน</span>
+        <span id="saveSpinner" class="hidden w-4 h-4 rounded-full border-2 border-white/50 border-t-white animate-spin"></span>
+      </button>
+     </div>
+    </form>
+   </div>
+  </div>
+
+  <!-- Toast system -->
+  <div id="toast" class="toast hidden-toast fixed right-4 bottom-4 z-50 rounded-2xl bg-slate-900 text-white px-5 py-3.5 text-sm shadow-2xl flex items-center gap-2"></div>
+
+  <!-- Dynamic Javascript Module integrating Firebase SDK 11 & fixes -->
+  <script type="module">
+    // Firebase 11+ ES module CDN references
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+    import { getDatabase, ref, set, push, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+
+    // Provided production configurations
+    const firebaseConfig = {
+      apiKey: "AIzaSyCDRWtVDsk0kvCPepLre5VRi0KQiOvyaEY",
+      authDomain: "karn-ban.firebaseapp.com",
+      databaseURL: "https://karn-ban-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "karn-ban",
+      storageBucket: "karn-ban.firebasestorage.app",
+      messagingSenderId: "944482789504",
+      appId: "1:944482789504:web:57842f197b9a1b25359e65"
+    };
+
+    const state = {
+      records: [],
+      selectedDate: startOfDay(new Date()),
+      editingRecord: null,
+      deletingId: null,
+      activeTab: 'all',
+      globalSearchQuery: '',
+      suggestedSubjects: new Set(),
+      suggestedTeachers: new Set(),
+      userId: generateUserId(),
+      subscriptions: [],
+      mySubscription: null
+    };
+
+    function generateUserId() {
+      let id = localStorage.getItem('homework-tracker-user-id');
+      if (!id) {
+        id = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('homework-tracker-user-id', id);
+      }
+      return id;
+    }
+
+    const homeworkList = document.getElementById('homeworkList');
+    const emptyState = document.getElementById('emptyState');
+    const modal = document.getElementById('modal');
+    const form = document.getElementById('homeworkForm');
+    const toast = document.getElementById('toast');
+
+    const fields = {
+      title: document.getElementById('titleInput'),
+      type: document.getElementById('typeInput'),
+      subject: document.getElementById('subjectInput'),
+      description: document.getElementById('descriptionInput'),
+      teacher: document.getElementById('teacherInput'),
+      assigned: document.getElementById('assignedInput'),
+      due: document.getElementById('dueInput')
+    };
+
+    const dataHandler = {
+      onDataChanged(data) {
+        state.records = [...data].sort((a,b) => {
+          const aD = parseSafeDate(a.due_date);
+          const bD = parseSafeDate(b.due_date);
+          const aTime = aD ? aD.getTime() : Infinity;
+          const bTime = bD ? bD.getTime() : Infinity;
+          return aTime - bTime;
+        });
+
+        // บันทึกวิชาและครูที่เคยพิมพ์ไว้
+        state.suggestedSubjects.clear();
+        state.suggestedTeachers.clear();
+        state.records.forEach(r => {
+          if(r.subject) state.suggestedSubjects.add(r.subject);
+          if(r.teacher) state.suggestedTeachers.add(r.teacher);
+        });
+
+        renderAll();
+      }
+    };
+
+    let db;
+    function initData() {
+      try {
+        const app = initializeApp(firebaseConfig);
+        db = getDatabase(app);
+
+        // Listen in Real-time to Database changes
+        const hwRef = ref(db, 'homework');
+        onValue(hwRef, (snapshot) => {
+          const val = snapshot.val();
+          const records = [];
+          if (val) {
+            Object.keys(val).forEach(key => {
+              records.push({
+                __backendId: key,
+                ...val[key]
+              });
+            });
+          }
+          dataHandler.onDataChanged(records);
+        }, (error) => {
+          console.error("Firebase database integration error: ", error);
+          showToast('ไม่สามารถเชื่อมต่อข้อมูลจากระบบ คลาวด์ ได้');
+        });
+
+        // Listen to email subscriptions
+        const subRef = ref(db, 'subscriptions');
+        onValue(subRef, (snapshot) => {
+          const val = snapshot.val();
+          state.subscriptions = [];
+          state.mySubscription = null;
+          if (val) {
+            Object.keys(val).forEach(key => {
+              const item = {
+                __backendId: key,
+                ...val[key]
+              };
+              state.subscriptions.push(item);
+              if (item.userId === state.userId) {
+                state.mySubscription = item;
+              }
+            });
+          }
+          renderSubscriptionState();
+        }, (error) => {
+          console.error("Firebase subscription synchronization error: ", error);
+        });
+      } catch (err) {
+        console.error("Firebase initialize err: ", err);
+        showToast('เกิดข้อผิดพลาดในการโหลดระบบฐานข้อมูล');
+      }
+    }
+
+    function startOfDay(date){
+      if(!date) return new Date();
+      const d = new Date(date);
+      d.setHours(0,0,0,0);
+      return d;
+    }
+
+    function sameDay(a, b){
+      return startOfDay(a).getTime() === startOfDay(b).getTime();
+    }
+
+    // Safe parser for incoming database dates to prevent NaN/Timezone issues
+    function parseSafeDate(dateStr) {
+      if (!dateStr) return null;
+      const d = new Date(dateStr);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function getWeekDates(baseDate){
+      const base = startOfDay(baseDate);
+      const day = base.getDay();
+      const diffToMonday = day === 0 ? -6 : 1 - day;
+      const monday = new Date(base);
+      monday.setDate(base.getDate() + diffToMonday);
+      return Array.from({length:7}, (_,i) => {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        return d;
+      });
+    }
+
+    function formatThaiDate(date, opts = {}) {
+      if(!date) return '';
+      return date.toLocaleDateString('th-TH', {
+        day:'numeric',
+        month:'short',
+        ...opts
+      });
+    }
+
+    function isToday(date){ return sameDay(date, new Date()) }
+    function isTomorrow(date){
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate()+1);
+      return sameDay(date, tomorrow);
+    }
+
+    function isOverdue(record){
+      if(!record.due_date) return false;
+      return startOfDay(new Date(record.due_date)) < startOfDay(new Date());
+    }
+
+    function isUpcoming(record){
+      if(!record.due_date) return false;
+      const due = startOfDay(new Date(record.due_date));
+      const today = startOfDay(new Date());
+      const diff = (due - today) / 86400000;
+      return diff >= 1 && diff <= 3;
+    }
+
+    // Utility function: Verify if the homework was completed by this user ID
+    function isCompletedByUser(record) {
+      const completedBy = (record.completed_by || '').split(',').filter(Boolean);
+      return completedBy.includes(state.userId);
+    }
+
+    function renderAll(){
+      renderSummary();
+      renderWeekStrip();
+      renderUpcomingBanner();
+      if (state.activeTab === 'archive') {
+        renderArchiveView();
+      } else {
+        renderDailyList();
+      }
+    }
+
+    function renderUpcomingBanner() {
+      const banner = document.getElementById('upcomingAlertBanner');
+      const countEl = document.getElementById('upcomingBannerCount');
+      const listEl = document.getElementById('upcomingTasksList');
+
+      if (!banner || !countEl || !listEl) return;
+
+      const today = startOfDay(new Date());
+
+      // Get all uncompleted duties due in 0 to 3 days (today is 0)
+      const upcoming = state.records.filter(r => {
+        if (!r.due_date) return false;
+        if (isCompletedByUser(r)) return false;
+        
+        const due = startOfDay(new Date(r.due_date));
+        const diff = Math.round((due - today) / 86400000);
+        return diff >= 0 && diff <= 3;
+      });
+
+      if (upcoming.length === 0) {
+        banner.classList.add('hidden');
+        return;
+      }
+
+      banner.classList.remove('hidden');
+      countEl.textContent = upcoming.length;
+
+      // Clear list and render tags
+      listEl.innerHTML = '';
+      upcoming.slice(0, 5).forEach(r => {
+        const due = startOfDay(new Date(r.due_date));
+        const diff = Math.round((due - today) / 86400000);
+        const isExam = r.type === 'exam';
+        
+        let label = '';
+        if (diff === 0) {
+          label = 'กำหนดวันนี้ ⚠️';
+        } else {
+          label = `กำหนดอีก ${diff} วัน ⏰`;
+        }
+
+        const tag = document.createElement('span');
+        tag.className = `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold ${
+          isExam 
+            ? 'bg-violet-100/80 text-violet-700 border border-violet-200/50' 
+            : 'bg-rose-100/80 text-rose-700 border border-rose-200/50'
+        }`;
+        tag.innerHTML = `
+          ${isExam ? '📅 สอบ:' : '📝'} 
+          <strong>${r.subject || 'ไม่ระบุวิชา'}</strong> - ${r.title || 'ไม่ระบุชื่อ'} 
+          <span class="opacity-80">(${label})</span>
+        `;
+        listEl.appendChild(tag);
+      });
+
+      if (upcoming.length > 5) {
+        const moreTag = document.createElement('span');
+        moreTag.className = 'inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200/30';
+        moreTag.textContent = `และอีก ${upcoming.length - 5} รายการ...`;
+        listEl.appendChild(moreTag);
+      }
+    }
+
+    function renderSummary(){
+      const homeworkRecords = state.records.filter(r => (r.type || 'homework') === 'homework');
+      const examRecords = state.records.filter(r => r.type === 'exam');
+
+      // count active task summaries (excluding already completed ones for better productivity utility)
+      // Exclude overdue homework from active total count as they are archived in user history
+      const totalCount = homeworkRecords.filter(r => !isOverdue(r)).length;
+      const todayCount = homeworkRecords.filter(r => r.due_date && isToday(new Date(r.due_date)) && !isCompletedByUser(r)).length;
+      const upcomingCount = homeworkRecords.filter(r => isUpcoming(r) && !isCompletedByUser(r)).length;
+      const overdueCount = homeworkRecords.filter(r => isOverdue(r) && !isCompletedByUser(r)).length;
+      const totalExams = examRecords.length;
+      const grandTotalCount = state.records.length;
+
+      document.getElementById('weekCount').textContent = totalCount;
+      document.getElementById('todayCount').textContent = todayCount;
+      document.getElementById('upcomingCount').textContent = upcomingCount;
+      document.getElementById('overdueCount').textContent = overdueCount;
+      document.getElementById('examCount').textContent = totalExams;
+      const grandTotalEl = document.getElementById('grandTotalCount');
+      if (grandTotalEl) grandTotalEl.textContent = grandTotalCount;
+    }
+
+    function renderWeekStrip(){
+      const weekStrip = document.getElementById('weekStrip');
+      weekStrip.innerHTML = '';
+      const dates = getWeekDates(state.selectedDate);
+      document.getElementById('weekRange').textContent = `${formatThaiDate(dates[0])} - ${formatThaiDate(dates[6], {year:'numeric'})}`;
+      const dayNames = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+
+      dates.forEach(date => {
+        const homeworkCount = state.records.filter(r => (r.type || 'homework') === 'homework' && r.due_date && sameDay(new Date(r.due_date), date)).length;
+        const exams = state.records.filter(r => r.type === 'exam' && r.due_date && sameDay(new Date(r.due_date), date));
+        const examCount = exams.length;
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'day-card focus-ring rounded-3xl bg-white p-4 text-left';
+        if(sameDay(date, state.selectedDate)) btn.classList.add('active');
+
+        const examSubjects = exams.map(e => e.subject || 'ไม่ระบุวิชา').join(', ');
+
+        btn.innerHTML = `
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="text-xs font-semibold day-muted text-slate-400">${dayNames[date.getDay()]}</p>
+              <p class="text-2xl font-bold mt-1">${date.getDate()}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-[11px] font-semibold day-muted text-slate-400">${homeworkCount} งาน</p>
+              <p class="text-[11px] font-semibold day-muted text-slate-400 mt-1">${examCount} สอบ</p>
+            </div>
+          </div>
+          ${examCount > 0 ? `<p class="text-[11px] mt-2 day-muted text-violet-600 truncate font-semibold">📚 ${examSubjects}</p>` : ''}
+          <p class="text-xs mt-1 day-muted text-slate-400">${date.toLocaleDateString('th-TH', {month:'short'})}</p>
+        `;
+
+        btn.addEventListener('click', () => {
+          state.selectedDate = startOfDay(date);
+          renderAll();
+        });
+
+        weekStrip.appendChild(btn);
+      });
+    }
+
+    function renderDailyList(){
+      document.getElementById('currentView').classList.remove('hidden');
+      document.getElementById('archiveView').classList.add('hidden');
+
+      const selected = state.records.filter(r => {
+        const searchMatch = state.globalSearchQuery === '' || 
+          r.title?.toLowerCase().includes(state.globalSearchQuery.toLowerCase()) ||
+          r.subject?.toLowerCase().includes(state.globalSearchQuery.toLowerCase()) ||
+          r.teacher?.toLowerCase().includes(state.globalSearchQuery.toLowerCase()) ||
+          r.description?.toLowerCase().includes(state.globalSearchQuery.toLowerCase());
+
+        if(!searchMatch) return false;
+
+        if(state.activeTab === 'all'){
+          // Exclude homework that is overdue (as requested by user)
+          if ((r.type || 'homework') === 'homework' && isOverdue(r)) {
+            return false;
+          }
+          return true;
+        }
+
+        if(state.activeTab === 'no-due'){
+          return !r.due_date;
+        }
+
+        const typeMatch = (r.type || 'homework') === state.activeTab;
+        const isSameDay = r.due_date && sameDay(new Date(r.due_date), state.selectedDate);
+        
+        return typeMatch && isSameDay;
+      });
+
+      const existing = new Map([...homeworkList.children].map(el => [el.dataset.id, el]));
+
+      selected.forEach(record => {
+        let card = existing.get(record.__backendId);
+        if(!card){
+          const clone = document.getElementById('homeworkTemplate').content.cloneNode(true);
+          card = clone.querySelector('article');
+          card.dataset.id = record.__backendId;
+          homeworkList.appendChild(clone);
+        }
+        updateCard(card, record);
+        existing.delete(record.__backendId);
+      });
+
+      existing.forEach(el => el.remove());
+
+      if(state.activeTab === 'all'){
+        document.getElementById('selectedDateText').textContent = 'มุมมองรวมทุกช่วงเวลาและการตรวจงาน';
+      }else{
+        document.getElementById('selectedDateText').textContent = selectedDateLabel(state.selectedDate);
+      }
+      document.getElementById('itemCountText').textContent = `${selected.length} รายการ`;
+      
+      updatePersonalStats();
+      emptyState.classList.toggle('hidden', selected.length > 0);
+      updateEmptyState();
+      updateTabs();
+      lucide.createIcons();
+    }
+
+    function renderArchiveView(){
+      document.getElementById('currentView').classList.add('hidden');
+      document.getElementById('archiveView').classList.remove('hidden');
+
+      const archived = state.records.filter(r => {
+        const searchMatch = state.globalSearchQuery === '' || 
+          r.title?.toLowerCase().includes(state.globalSearchQuery.toLowerCase()) ||
+          r.subject?.toLowerCase().includes(state.globalSearchQuery.toLowerCase()) ||
+          r.teacher?.toLowerCase().includes(state.globalSearchQuery.toLowerCase()) ||
+          r.description?.toLowerCase().includes(state.globalSearchQuery.toLowerCase());
+
+        if(!searchMatch) return false;
+
+        // ไม่แสดงข้อสอบในคลังย้อนหลังของการบ้าน
+        if(r.type === 'exam') return false;
+
+        // แสดงผลเฉพาะการทำการบ้านสำเร็จแล้ว โดยเช็คจาก completed_by ของ user ID หรือ กรณีเลยกำหนดแล้ว
+        const userDone = isCompletedByUser(r);
+        return userDone || isOverdue(r);
+      });
+
+      const archiveList = document.getElementById('archiveList');
+      const existing = new Map([...archiveList.children].map(el => [el.dataset.id, el]));
+
+      archived.forEach(record => {
+        let card = existing.get(record.__backendId);
+        if(!card){
+          const clone = document.getElementById('homeworkTemplate').content.cloneNode(true);
+          card = clone.querySelector('article');
+          card.dataset.id = record.__backendId;
+          archiveList.appendChild(clone);
+        }
+        updateCard(card, record);
+        existing.delete(record.__backendId);
+      });
+
+      existing.forEach(el => el.remove());
+
+      document.getElementById('archiveEmptyState').classList.toggle('hidden', archived.length > 0);
+      updateTabs();
+      lucide.createIcons();
+    }
+
+    function updatePersonalStats(){
+      const personalStatsText = document.getElementById('personalStatsText');
+      const completedCount = state.records.filter(r => r.type !== 'exam' && isCompletedByUser(r)).length;
+      
+      if(completedCount > 0){
+        personalStatsText.textContent = `ส่งแล้ว ${completedCount} งาน`;
+        personalStatsText.classList.remove('hidden');
+      }else{
+        personalStatsText.classList.add('hidden');
+      }
+    }
+
+    function updateTabs(){
+      document.getElementById('allTab').classList.toggle('active', state.activeTab === 'all');
+      document.getElementById('homeworkTab').classList.toggle('active', state.activeTab === 'homework');
+      document.getElementById('examTab').classList.toggle('active', state.activeTab === 'exam');
+      document.getElementById('noDueTab').classList.toggle('active', state.activeTab === 'no-due');
+      document.getElementById('archiveTab').classList.toggle('active', state.activeTab === 'archive');
+    }
+
+    function updateEmptyState(){
+      const iconWrap = document.getElementById('emptyIconWrap');
+      const icon = document.getElementById('emptyIcon');
+      const emptyTitle = document.querySelector('[data-template-id="empty-title"]');
+      const emptyDesc = document.querySelector('[data-template-id="empty-description"]');
+
+      if (!iconWrap || !icon) return;
+
+      const overdueCount = state.records.filter(r => (r.type || 'homework') === 'homework' && isOverdue(r)).length;
+
+      if(state.activeTab === 'all'){
+        iconWrap.className = 'mx-auto w-16 h-16 rounded-3xl bg-blue-50 text-blue-500 flex items-center justify-center mb-4';
+        icon.setAttribute('data-lucide','list-todo');
+        if (emptyTitle) emptyTitle.textContent = 'ไม่มีรายการงาน/นัดสอบทั่วไป';
+        if (emptyDesc) {
+          if (overdueCount > 0) {
+            emptyDesc.innerHTML = `ยังไม่มีข้อสอบหรือการบ้านใหม่ที่อยู่ในกำหนดเวลาส่งปกติ<br><span class="text-rose-500 font-semibold mt-2 block hover:underline cursor-pointer" onclick="document.getElementById('overdueCardBtn').click()"><i data-lucide="circle-alert" class="inline w-4 h-4 mr-1"></i> มีการบ้านเลยกำหนดกำหนดส่งเรียงอยู่ ${overdueCount} งาน ถูกแยกไว้ในแถบ "ประวัติผู้ใช้งาน" (คลิกดูเลย)</span>`;
+          } else {
+            emptyDesc.textContent = 'ยังไม่มีตารางแผนหรือกิจกรรมที่ต้องการในระบบขณะนี้';
+          }
+        }
+      } else if(state.activeTab === 'exam'){
+        iconWrap.className = 'mx-auto w-16 h-16 rounded-3xl bg-violet-50 text-violet-500 flex items-center justify-center mb-4';
+        icon.setAttribute('data-lucide','clipboard-list');
+        if (emptyTitle) emptyTitle.textContent = 'ไม่มีตารางสอบตามวันที่เลือก';
+        if (emptyDesc) emptyDesc.textContent = 'ยินดีด้วย! วันนี้ไม่มีตารางนัดหมายสอบย่อยวิชาเรียนใดๆ';
+      } else if(state.activeTab === 'homework'){
+        iconWrap.className = 'mx-auto w-16 h-16 rounded-3xl bg-sky-50 text-sky-500 flex items-center justify-center mb-4';
+        icon.setAttribute('data-lucide','book-open-check');
+        if (emptyTitle) emptyTitle.textContent = 'ไม่มีกำหนดส่งการบ้านในวันที่เลือก';
+        if (emptyDesc) emptyDesc.textContent = 'ยอดเยี่ยมมาก! ไม่มีงานมอบหมายค้างส่งส่งท้ายสัปดาห์ในวันเวลานี้';
+      } else {
+        iconWrap.className = 'mx-auto w-16 h-16 rounded-3xl bg-blue-50 text-blue-500 flex items-center justify-center mb-4';
+        icon.setAttribute('data-lucide','calendar-check-2');
+        if (emptyTitle) emptyTitle.textContent = 'ไม่มีกำหนดปฏิทินที่ระบุไว้';
+        if (emptyDesc) emptyDesc.textContent = 'ยังไม่มีการเก็บบันทึกประวิติหรือสถิติในหมวดหมู่นี้ในระบบคลาวด์';
+      }
+    }
+
+    function selectedDateLabel(date){
+      if(isToday(date)) return 'วันนี้ • ' + formatThaiDate(date, {weekday:'long',year:'numeric'});
+      if(isTomorrow(date)) return 'พรุ่งนี้ • ' + formatThaiDate(date, {weekday:'long',year:'numeric'});
+      return formatThaiDate(date, {weekday:'long',year:'numeric'});
+    }
+
+    function updateCard(card, record){
+      const dueDate = record.due_date ? new Date(record.due_date) : null;
+      const isExam = record.type === 'exam';
+      const statusBar = card.querySelector('.status-bar');
+      const badge = card.querySelector('[data-template-id="homework-badge"]');
+      const dateIcon = card.querySelector('.date-icon');
+      const completionSection = card.querySelector('.completion-section');
+      const toggleBtn = card.querySelector('.toggle-complete');
+
+      let daysText = 'ไม่มีกำหนดส่ง';
+      if (dueDate) {
+        const today = startOfDay(new Date());
+        const due = startOfDay(dueDate);
+        const daysLeft = Math.ceil((due - today) / 86400000);
+
+        if (daysLeft < 0) {
+          daysText = 'เลยกำหนด ' + Math.abs(daysLeft) + ' วัน';
+        } else if (daysLeft === 0) {
+          daysText = 'ต้องส่งวันนี้';
+        } else if (daysLeft === 1) {
+          daysText = 'อีก 1 วัน';
+        } else if (daysLeft <= 7) {
+          daysText = 'อีก ' + daysLeft + ' วัน';
+        } else {
+          daysText = 'อีก ' + Math.ceil(daysLeft / 7) + ' สัปดาห์';
+        }
+      }
+
+      badge.textContent = isExam ? 'นัดสอบ' : 'การบ้าน';
+      badge.className = isExam
+        ? 'canva-tag inline-flex rounded-full px-3 py-1 text-xs font-semibold bg-violet-50 text-violet-600'
+        : 'canva-tag inline-flex rounded-full px-3 py-1 text-xs font-semibold bg-blue-50 text-blue-600';
+
+      dateIcon.className = isExam
+        ? 'date-icon w-8 h-8 rounded-full bg-violet-100 text-violet-700 flex items-center justify-center shrink-0'
+        : 'date-icon w-8 h-8 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center shrink-0';
+
+      dateIcon.innerHTML = isExam
+        ? '<i data-lucide="clipboard-list" class="w-4 h-4"></i>'
+        : '<i data-lucide="book-open" class="w-4 h-4"></i>';
+
+      card.querySelector('[data-template-id="homework-title"]').textContent = record.title || (isExam ? 'ไม่มีหัวข้อจัดสอบ' : 'การบ้านไม่มีหัวข้อ');
+      card.querySelector('[data-template-id="homework-subject"]').textContent = record.subject || 'ไม่ระบุชื่อกลุ่มวิชา';
+      card.querySelector('[data-template-id="homework-teacher"]').textContent = record.teacher ? '👨‍🏫 ครูผู้สอน: ' + record.teacher : '';
+      card.querySelector('[data-template-id="homework-description"]').textContent = record.description || 'ไม่มีลายละเอียดเพิ่มเติม';
+      card.querySelector('[data-template-id="homework-date"]').textContent = dueDate
+        ? (isExam ? 'วันเข้าสอบ: ' : 'กำหนดส่ง: ') + formatThaiDate(dueDate, {year:'numeric'})
+        : 'ไม่มีกำหนดระยะเวลา';
+      card.querySelector('[data-template-id="homework-days-left"]').textContent = daysText;
+
+      const status = card.querySelector('[data-template-id="homework-status"]');
+
+      // สำหรับการบ้านเท่านั้น ให้แสดงส่วนทำเครื่องหมายเสร็จ
+      const isUserDone = isCompletedByUser(record);
+      if(!isExam){
+        completionSection.classList.remove('hidden');
+        toggleBtn.classList.toggle('completed', isUserDone);
+        
+        const myStatusSection = card.querySelector('[data-template-id="my-status-section"]');
+        if(isUserDone){
+          myStatusSection.classList.remove('hidden');
+        }else{
+          myStatusSection.classList.add('hidden');
+        }
+      }else{
+        completionSection.classList.add('hidden');
+      }
+
+      // แก้ไขบัคการอัปเดต Status Bar เพื่อแสดงความสำคัญสูงสุดของการทำการบ้านเสร็จสมบูรณ์
+      if(isExam){
+        if(!dueDate){
+          status.textContent = 'ไม่มีกำหนด';
+          status.className = 'canva-tag text-xs font-semibold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full';
+          statusBar.classList.add('hidden');
+        }else if(isOverdue(record)){
+          status.textContent = 'ผ่านไปแล้ว';
+          status.className = 'canva-tag text-xs font-semibold text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full';
+          statusBar.classList.remove('hidden');
+          statusBar.textContent = '📝 การสอบนี้ผ่านไปแล้ว';
+          statusBar.className = 'status-bar px-5 py-3 border-b text-xs font-semibold bg-rose-50 text-rose-600 border-rose-100 block';
+        }else if(isToday(dueDate)){
+          status.textContent = 'สอบวันนี้';
+          status.className = 'canva-tag text-xs font-semibold text-violet-600 bg-violet-50 px-2.5 py-1 rounded-full';
+          statusBar.classList.remove('hidden');
+          statusBar.textContent = '⚡ มีตารางสอบในวันนี้!';
+          statusBar.className = 'status-bar px-5 py-3 border-b text-xs font-semibold bg-violet-50 text-violet-600 border-violet-100 block';
+        }else if(isUpcoming(record)){
+          status.textContent = 'ใกล้สอบเข้ามา';
+          status.className = 'canva-tag text-xs font-semibold text-amber-500 bg-amber-50 px-2.5 py-1 rounded-full';
+          statusBar.classList.remove('hidden');
+          statusBar.textContent = '⏰ ใกล้ถึงกำหนดวันเข้าสอบ';
+          statusBar.className = 'status-bar px-5 py-3 border-b text-xs font-semibold bg-amber-50 text-amber-600 border-amber-100 block';
+        }else{
+          status.textContent = 'วางแผนไว้';
+          status.className = 'canva-tag text-xs font-semibold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full';
+          statusBar.classList.add('hidden');
+        }
+      }else{
+        // สำหรับการบ้าน -> ถ้าผู้ใช้งานกดติ๊กส่งแล้ว (isUserDone) จะต้องขึ้น "ส่งแล้ว" มีความสำคัญสูงสุดและขึ้นสีเขียว
+        if(isUserDone){
+          status.textContent = 'ส่งสำเร็จ';
+          status.className = 'canva-tag text-xs font-semibold text-green-600 bg-green-50 px-2.5 py-1 rounded-full';
+          statusBar.classList.remove('hidden');
+          statusBar.textContent = '✅ ท่านได้ทำเครื่องหมายส่งการบ้านแล้ว';
+          statusBar.className = 'status-bar px-5 py-3 border-b text-xs font-semibold bg-green-50 text-green-600 border-green-100 block';
+        }else if(!dueDate){
+          status.textContent = 'ไม่มีกำหนด';
+          status.className = 'canva-tag text-xs font-semibold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full';
+          statusBar.classList.add('hidden');
+        }else if(isOverdue(record)){
+          status.textContent = 'เลยกำหนด';
+          status.className = 'canva-tag text-xs font-semibold text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full';
+          statusBar.classList.remove('hidden');
+          statusBar.textContent = '⛔ การบ้านวิชานี้เลยกำหนดส่งแล้ว';
+          statusBar.className = 'status-bar px-5 py-3 border-b text-xs font-semibold bg-rose-50 text-rose-600 border-rose-100 block';
+        }else if(isToday(dueDate)){
+          status.textContent = 'ส่งวันนี้';
+          status.className = 'canva-tag text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full';
+          statusBar.classList.remove('hidden');
+          statusBar.textContent = '📌 ต้องรีบทำการส่งงานภายในวันนี้';
+          statusBar.className = 'status-bar px-5 py-3 border-b text-xs font-semibold bg-blue-50 text-blue-600 border-blue-100 block';
+        }else if(isUpcoming(record)){
+          status.textContent = 'ใกล้ส่งแล้ว';
+          status.className = 'canva-tag text-xs font-semibold text-amber-500 bg-amber-50 px-2.5 py-1 rounded-full';
+          statusBar.classList.remove('hidden');
+          statusBar.textContent = '⏰ อีกไม่นานจะต้องจัดส่งการบ้าน';
+          statusBar.className = 'status-bar px-5 py-3 border-b text-xs font-semibold bg-amber-50 text-amber-600 border-amber-100 block';
+        }else{
+          status.textContent = 'ตามแผนส่ง';
+          status.className = 'canva-tag text-xs font-semibold text-slate-400 bg-slate-50 px-2.5 py-1 rounded-full';
+          statusBar.classList.add('hidden');
+        }
+      }
+
+      card.querySelector('.edit-btn').onclick = () => openEditModal(record);
+      card.querySelector('.delete-btn').onclick = (e) => handleDelete(record, e.currentTarget);
+      
+      toggleBtn.onclick = (e) => {
+        e.preventDefault();
+        handleToggleComplete(record, card);
+      };
+    }
+
+    function openAddModal(){
+      state.editingRecord = null;
+      form.reset();
+      fields.type.value = (state.activeTab === 'all' || state.activeTab === 'archive') ? 'homework' : state.activeTab;
+      fields.assigned.value = toDateInputValue(new Date());
+      fields.due.value = (state.activeTab === 'all' || state.activeTab === 'archive' || state.selectedDate.getTime() === startOfDay(new Date()).getTime()) ? '' : toDateInputValue(state.selectedDate);
+      document.getElementById('modalTitleAdd').classList.remove('hidden');
+      document.getElementById('modalTitleEdit').classList.add('hidden');
+      document.getElementById('formError').classList.add('hidden');
+      document.getElementById('limitMessage').classList.add('hidden');
+      modal.classList.remove('hidden');
+      updateSuggestions();
+    }
+
+    function openEditModal(record){
+      state.editingRecord = record;
+      fields.title.value = record.title || '';
+      fields.type.value = record.type || 'homework';
+      fields.subject.value = record.subject || '';
+      fields.description.value = record.description || '';
+      fields.teacher.value = record.teacher || '';
+      fields.assigned.value = record.assigned_date ? toDateInputValue(new Date(record.assigned_date)) : '';
+      fields.due.value = record.due_date ? toDateInputValue(new Date(record.due_date)) : '';
+      document.getElementById('modalTitleAdd').classList.add('hidden');
+      document.getElementById('modalTitleEdit').classList.remove('hidden');
+      document.getElementById('formError').classList.add('hidden');
+      document.getElementById('limitMessage').classList.add('hidden');
+      modal.classList.remove('hidden');
+      updateSuggestions();
+    }
+
+    function updateSuggestions(){
+      const subjectList = document.getElementById('subjectList');
+      const teacherList = document.getElementById('teacherList');
+      subjectList.innerHTML = '';
+      teacherList.innerHTML = '';
+      state.suggestedSubjects.forEach(s => {
+        const option = document.createElement('option');
+        option.value = s;
+        subjectList.appendChild(option);
+      });
+      state.suggestedTeachers.forEach(t => {
+        const option = document.createElement('option');
+        option.value = t;
+        teacherList.appendChild(option);
+      });
+    }
+
+    function closeModal(){
+      modal.classList.add('hidden');
+      state.editingRecord = null;
+    }
+
+    function toDateInputValue(date){
+      try {
+        const d = new Date(date);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      } catch (err) {
+        return '';
+      }
+    }
+
+    async function handleSubmit(event){
+      event.preventDefault();
+      const formError = document.getElementById('formError');
+      formError.classList.add('hidden');
+
+      if(!fields.title.value.trim()){
+        formError.textContent = 'กรุณากรอกชื่อรายการของข้อมูล';
+        formError.classList.remove('hidden');
+        return;
+      }
+
+      if(state.activeTab !== 'no-due' && !fields.due.value && !state.editingRecord){
+        formError.textContent = 'กรุณาระบุเกณฑ์กำหนดส่งหรือเลือกแถบงาน "ไม่มีกำหนด" ก่อน';
+        formError.classList.remove('hidden');
+        return;
+      }
+
+      if(!state.editingRecord && state.records.length >= 999){
+        document.getElementById('limitMessage').classList.remove('hidden');
+        return;
+      }
+
+      setSaving(true);
+
+      const payload = {
+        title: fields.title.value.trim(),
+        type: fields.type.value,
+        subject: fields.subject.value.trim(),
+        description: fields.description.value.trim(),
+        teacher: fields.teacher.value.trim(),
+        assigned_date: fields.assigned.value ? new Date(fields.assigned.value + 'T00:00:00').toISOString() : null,
+        due_date: fields.due.value ? new Date(fields.due.value + 'T00:00:00').toISOString() : null,
+        created_at: state.editingRecord?.created_at || new Date().toISOString(),
+        completed_by: state.editingRecord?.completed_by || ''
+      };
+
+      try {
+        if(state.editingRecord){
+          const recRef = ref(db, `homework/${state.editingRecord.__backendId}`);
+          await update(recRef, payload);
+        }else{
+          const listRef = ref(db, 'homework');
+          const newDocRef = push(listRef);
+          await set(newDocRef, {
+            ...payload,
+            __backendId: newDocRef.key
+          });
+
+          // Extract all subscribed classmate emails and combine with main email
+          const enrolledEmails = state.subscriptions.map(s => s.email).filter(Boolean);
+          const notifyRecipients = ["natchakorn2552@gmail.com", ...enrolledEmails];
+
+          // Trigger server-side HTML email notification for new task
+          fetch("/api/notify", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              ...payload,
+              recipients: notifyRecipients
+            })
+          })
+          .then(res => res.json())
+          .then(res => {
+            console.log("Email notify backend outcome:", res);
+            if (res.simulated) {
+              showToast(res.message);
+            } else if (res.status === "success") {
+              showToast(`📢 จัดส่งอีเมลแจ้งเพื่อนร่วมชั้นรวม ${notifyRecipients.length} คนสำเร็จแล้ว!`);
+            }
+          })
+          .catch(err => {
+            console.error("Failed to post email notification API:", err);
+          });
+        }
+
+        setSaving(false);
+        if(payload.due_date) {
+          state.selectedDate = startOfDay(new Date(payload.due_date));
+        }
+        state.activeTab = payload.type;
+        closeModal();
+        showToast(state.editingRecord ? 'บันทึกแก้ไขวิชาเรียนสำเร็จ' : 'เพิ่มรายการข้อมูลจัดส่งการเรียนการสอนแล้ว');
+      } catch (err) {
+        console.error("Firebase submit error: ", err);
+        setSaving(false);
+        formError.textContent = 'ไม่สามารถบันทึกข้อมูลทางฐานข้อมูลได้ กรุณาลองใหม่อีกครั้ง';
+        formError.classList.remove('hidden');
+      }
+    }
+
+    async function handleDelete(record, btn){
+      if(state.deletingId !== record.__backendId){
+        state.deletingId = record.__backendId;
+        btn.innerHTML = '<i data-lucide="check" class="w-4.5 h-4.5"></i>';
+        btn.classList.add('bg-rose-50','text-rose-600');
+        lucide.createIcons();
+
+        setTimeout(() => {
+          if(state.deletingId === record.__backendId){
+            state.deletingId = null;
+            btn.innerHTML = '<i data-lucide="trash-2" class="w-4.5 h-4.5"></i>';
+            btn.classList.remove('bg-rose-50','text-rose-600');
+            lucide.createIcons();
+          }
+        }, 2200);
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="w-4.5 h-4.5 rounded-full border-2 border-rose-200 border-t-rose-500 animate-spin flex"></span>';
+
+      try {
+        const itemRef = ref(db, `homework/${record.__backendId}`);
+        await remove(itemRef);
+        state.deletingId = null;
+        showToast('ลบรายการโครงสร้างข้อมูลเป็นที่เรียบร้อย');
+      } catch (err) {
+        console.error("Firebase deletion err: ", err);
+        state.deletingId = null;
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="trash-2" class="w-4.5 h-4.5"></i>';
+        btn.classList.remove('bg-rose-50','text-rose-600');
+        showToast('ไม่สามารถลบรายการได้กรุณาลองใหม่อีกครั้ง');
+        lucide.createIcons();
+      }
+    }
+
+    async function handleToggleComplete(record, card){
+      const toggleBtn = card.querySelector('.toggle-complete');
+      toggleBtn.disabled = true;
+
+      const completedBy = (record.completed_by || '').split(',').filter(Boolean);
+      const isCurrentlyMarked = completedBy.includes(state.userId);
+      
+      let newCompletedBy;
+      if(isCurrentlyMarked){
+        newCompletedBy = completedBy.filter(id => id !== state.userId).join(',');
+      }else{
+        completedBy.push(state.userId);
+        newCompletedBy = completedBy.join(',');
+      }
+
+      try {
+        const recordRef = ref(db, `homework/${record.__backendId}`);
+        await update(recordRef, {
+          completed_by: newCompletedBy
+        });
+        showToast(isCurrentlyMarked ? 'ยกเลิกการส่งการบ้านแล้ว' : 'ส่งการบ้านเรียบร้อยความเร็วสูง');
+      } catch (err) {
+        console.error("Firebase complete toggle error: ", err);
+        showToast('ไม่สามารถตอบรับสถานะส่งงานได้');
+      } finally {
+        toggleBtn.disabled = false;
+      }
+    }
+
+    function setSaving(isSaving){
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = isSaving;
+      document.getElementById('saveSpinner').classList.toggle('hidden', !isSaving);
+      saveBtn.classList.toggle('opacity-70', isSaving);
+    }
+
+    function showToast(message){
+      toast.innerHTML = `<i data-lucide="bell" class="w-4 h-4 text-emerald-400"></i> <span>${message}</span>`;
+      toast.classList.remove('hidden-toast');
+      lucide.createIcons();
+      setTimeout(() => toast.classList.add('hidden-toast'), 2500);
+    }
+
+    function renderSubscriptionState() {
+      const emailInput = document.getElementById('subEmailInput');
+      const subBtn = document.getElementById('subBtn');
+      const subBtnLabel = document.getElementById('subBtnLabel');
+      const subCheckIcon = document.getElementById('subCheckIcon');
+      const countText = document.getElementById('subscribersCountText');
+      const subSpinner = document.getElementById('subSpinner');
+
+      if (!emailInput || !subBtn) return;
+
+      const registeredCount = state.subscriptions.length;
+      if (countText) {
+        if (registeredCount > 0) {
+          countText.textContent = `👥 มีเพื่อนร่วมชั้นกดติดตามแล้ว ${registeredCount} คน`;
+        } else {
+          countText.textContent = `👥 ยังไม่มีเพื่อนร่วมชั้นติดตามเมล`;
+        }
+      }
+
+      if (subSpinner) {
+        subSpinner.classList.add('hidden');
+      }
+
+      if (state.mySubscription) {
+        emailInput.value = state.mySubscription.email;
+        emailInput.disabled = true;
+        if (subBtnLabel) subBtnLabel.textContent = 'ยกเลิกติดตามข่าว';
+        if (subCheckIcon) subCheckIcon.classList.remove('hidden');
+        subBtn.className = 'canva-button focus-ring px-5 py-2.5 rounded-xl font-bold bg-rose-50 border border-rose-100 hover:bg-rose-100/80 text-rose-600 shadow-sm transition text-xs sm:text-sm inline-flex items-center justify-center gap-2 shrink-0';
+      } else {
+        if (!emailInput.disabled) {
+          // Keep manual text
+        } else {
+          emailInput.value = '';
+          emailInput.disabled = false;
+        }
+        if (subBtnLabel) subBtnLabel.textContent = 'กดติดตามแจ้งเตือน';
+        if (subCheckIcon) subCheckIcon.classList.add('hidden');
+        subBtn.className = 'canva-button focus-ring px-5 py-2.5 rounded-xl font-bold bg-slate-800 hover:bg-slate-900 text-white shadow-md transition text-xs sm:text-sm inline-flex items-center justify-center gap-2 shrink-0';
+      }
+      lucide.createIcons();
+    }
+
+    async function handleSubscriptionAction() {
+      const emailInput = document.getElementById('subEmailInput');
+      const subBtn = document.getElementById('subBtn');
+      const subBtnLabel = document.getElementById('subBtnLabel');
+      const subCheckIcon = document.getElementById('subCheckIcon');
+      const subSpinner = document.getElementById('subSpinner');
+      if (!emailInput || !subBtn) return;
+
+      const email = emailInput.value.trim();
+
+      if (state.mySubscription) {
+        subBtn.disabled = true;
+        if (subSpinner) subSpinner.classList.remove('hidden');
+        if (subCheckIcon) subCheckIcon.classList.add('hidden');
+        if (subBtnLabel) subBtnLabel.textContent = 'กำลังประมวลผล...';
+        try {
+          const itemRef = ref(db, `subscriptions/${state.mySubscription.__backendId}`);
+          await remove(itemRef);
+          showToast('ยกเลิกการติดตามจดหมายข่าวเรียบร้อย');
+        } catch (err) {
+          console.error("Unsubscribe error: ", err);
+          showToast('ล้มเหลว กรุณาลองอีกครั้ง');
+        } finally {
+          subBtn.disabled = false;
+          renderSubscriptionState();
+        }
+      } else {
+        if (!email) {
+          showToast('กรุณากรอกอีเมลของท่านก่อนทำรายการ');
+          return;
+        }
+        const emailFilter = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailFilter.test(email)) {
+          showToast('รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง');
+          return;
+        }
+
+        subBtn.disabled = true;
+        if (subSpinner) subSpinner.classList.remove('hidden');
+        if (subCheckIcon) subCheckIcon.classList.add('hidden');
+        if (subBtnLabel) subBtnLabel.textContent = 'กำลังจดทะเบียน...';
+
+        try {
+          const pushRef = push(ref(db, 'subscriptions'));
+          await set(pushRef, {
+            email: email,
+            userId: state.userId,
+            created_at: new Date().toISOString()
+          });
+          showToast('ยินดีต้อนรับ! สมัครติดตามจดหมายข่าวเรียบร้อยแล้ว');
+        } catch (err) {
+          console.error("Subscribe error: ", err);
+          showToast('ระบบคลาวด์ขัดข้อง กรุณาลองใหม่อีกครั้ง');
+        } finally {
+          subBtn.disabled = false;
+          renderSubscriptionState();
+        }
+      }
+    }
+
+    // Set up elements event listener triggers
+    document.getElementById('openModalBtn').addEventListener('click', openAddModal);
+    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+    document.getElementById('cancelBtn').addEventListener('click', closeModal);
+    document.getElementById('homeworkForm').addEventListener('submit', handleSubmit);
+    document.getElementById('subBtn').addEventListener('click', handleSubscriptionAction);
+
+    document.getElementById('globalSearchInput').addEventListener('input', (e) => {
+      state.globalSearchQuery = e.target.value;
+      if (state.activeTab === 'archive') {
+        renderArchiveView();
+      } else {
+        renderDailyList();
+      }
+    });
+
+    document.getElementById('allTab').addEventListener('click', () => {
+      state.activeTab = 'all';
+      renderDailyList();
+    });
+
+    document.getElementById('homeworkTab').addEventListener('click', () => {
+      state.activeTab = 'homework';
+      renderDailyList();
+    });
+
+    document.getElementById('examTab').addEventListener('click', () => {
+      state.activeTab = 'exam';
+      renderDailyList();
+    });
+
+    document.getElementById('noDueTab').addEventListener('click', () => {
+      state.activeTab = 'no-due';
+      renderDailyList();
+    });
+
+    document.getElementById('archiveTab').addEventListener('click', () => {
+      state.activeTab = 'archive';
+      renderArchiveView();
+    });
+
+    // Event listeners to handle interactive click action on stats summary cards
+    document.getElementById('weekCardBtn').addEventListener('click', () => {
+      state.activeTab = 'all';
+      renderDailyList();
+    });
+
+    document.getElementById('todayCardBtn').addEventListener('click', () => {
+      state.selectedDate = startOfDay(new Date());
+      state.activeTab = 'homework';
+      renderDailyList();
+    });
+
+    document.getElementById('upcomingCardBtn').addEventListener('click', () => {
+      state.activeTab = 'all';
+      renderDailyList();
+    });
+
+    document.getElementById('overdueCardBtn').addEventListener('click', () => {
+      state.activeTab = 'archive';
+      renderArchiveView();
+      showToast('แสดงรายการสถิติการเลยกำหนดส่งในช่อง "ประวัติผู้ใช้งาน" เรียบร้อยแล้ว');
+    });
+
+    document.getElementById('examCardBtn').addEventListener('click', () => {
+      state.selectedDate = startOfDay(new Date());
+      state.activeTab = 'exam';
+      renderDailyList();
+    });
+
+    document.getElementById('grandCardBtn').addEventListener('click', () => {
+      state.activeTab = 'all';
+      renderDailyList();
+    });
+
+    document.getElementById('prevWeekBtn').addEventListener('click', () => {
+      state.selectedDate.setDate(state.selectedDate.getDate() - 7);
+      renderAll();
+    });
+
+    document.getElementById('nextWeekBtn').addEventListener('click', () => {
+      state.selectedDate.setDate(state.selectedDate.getDate() + 7);
+      renderAll();
+    });
+
+    document.getElementById('upcomingNotifyBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('upcomingNotifyBtn');
+      const spinner = document.getElementById('upcomingNotifySpinner');
+      if (!btn) return;
+
+      btn.disabled = true;
+      if (spinner) spinner.classList.remove('hidden');
+
+      const today = startOfDay(new Date());
+
+      // Get all uncompleted duties due in 0 to 3 days (today is 0)
+      const upcoming = state.records.filter(r => {
+        if (!r.due_date) return false;
+        if (isCompletedByUser(r)) return false;
+        
+        const due = startOfDay(new Date(r.due_date));
+        const diff = Math.round((due - today) / 86400000);
+        return diff >= 0 && diff <= 3;
+      }).map(r => {
+        const due = startOfDay(new Date(r.due_date));
+        const diff = Math.round((due - today) / 86400000);
+        return {
+          title: r.title,
+          subject: r.subject,
+          due_date: r.due_date,
+          type: r.type || 'homework',
+          daysLeft: diff,
+          teacher: r.teacher
+        };
+      });
+
+      if (upcoming.length === 0) {
+        showToast('ไม่มีงานใกล้ส่งขณะนี้');
+        btn.disabled = false;
+        if (spinner) spinner.classList.add('hidden');
+        return;
+      }
+
+      // Extract classmate emails & my email
+      const enrolledEmails = state.subscriptions.map(s => s.email).filter(Boolean);
+      const notifyRecipients = ["natchakorn2552@gmail.com", ...enrolledEmails];
+
+      try {
+        const response = await fetch("/api/notify-upcoming", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            upcomingDuties: upcoming,
+            recipients: notifyRecipients
+          })
+        });
+        const res = await response.json();
+        console.log("Upcoming alert email backend result:", res);
+        if (res.simulated) {
+          showToast(res.message);
+        } else if (res.status === "success" || res.status === "partial_success") {
+          showToast(`📢 ส่งจดหมายแจ้งเตือนกำหนดส่งถึงเพื่อนร่วมวิชารวม ${notifyRecipients.length} คนเป็นที่เรียบร้อยแล้ว!`);
+        } else {
+          showToast(res.message || 'ส่งจดหมายล้มเหลว กรุณาตั้งค่า SMTP');
+        }
+      } catch (err) {
+        console.error("Failed to post upcoming summary alert API:", err);
+        showToast("⚠️ ระบบส่งแจ้งเตือนผิดพลาดทางเครือข่าย");
+      } finally {
+        btn.disabled = false;
+        if (spinner) spinner.classList.add('hidden');
+      }
+    });
+
+    modal.addEventListener('click', (e) => {
+      if(e.target.classList.contains('modal-backdrop')) closeModal();
+    });
+
+    // Run Initialization and render layouts
+    initData();
+  </script>
+ </body>
+</html>
