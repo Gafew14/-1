@@ -129,6 +129,10 @@
           <i data-lucide="search" class="w-4 h-4"></i>
         </span>
       </div>
+      <button id="openAdminBtn" class="canva-button focus-ring inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl font-semibold border border-indigo-100 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 shadow-lg shadow-indigo-100/10 hover:-translate-y-0.5 transition shrink-0 text-sm" type="button">
+        <i data-lucide="lock" class="w-4 h-4"></i>
+        <span>ระบบแอดมิน</span>
+      </button>
       <button id="openModalBtn" data-template-id="add-homework-button" class="canva-button focus-ring inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl font-semibold bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-100 hover:-translate-y-0.5 transition shrink-0 text-sm" type="button">
         <i data-lucide="plus" class="w-4 h-4"></i>
         <span>เพิ่มวิชา/งานสอบ</span>
@@ -295,12 +299,6 @@
             </div>
           </div>
         </div>
-        
-        <button id="upcomingNotifyBtn" class="canva-button focus-ring px-5 py-2.5 rounded-xl font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-md transition text-xs sm:text-sm inline-flex items-center justify-center gap-2 shrink-0 self-start md:self-center" type="button">
-          <span id="upcomingNotifySpinner" class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin hidden"></span>
-          <i data-lucide="mail" class="w-4 h-4 text-white animate-bounce"></i>
-          <span>ส่งอีเมลเตือนภารกิจกลุ่ม</span>
-        </button>
       </div>
     </section>
 
@@ -515,6 +513,131 @@
   </div>
 
   <!-- Toast system -->
+  <!-- Admin Modal containing Lock Screen and Dashboard -->
+  <div id="adminModal" class="fixed inset-0 z-50 hidden flex items-center justify-center animate-fade-in">
+    <div id="modalBackdropAdmin" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+    <div class="relative w-full max-w-2xl m-4 rounded-[1.7rem] bg-white shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-scale-up">
+      <!-- Close Button -->
+      <button id="closeAdminModalBtn" type="button" class="absolute top-5 right-5 focus-ring w-10 h-10 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 active:bg-slate-200 transition flex items-center justify-center text-slate-500 z-10" aria-label="ปิดหน้าต่าง">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <!-- 1. Lock Screen View -->
+      <div id="adminLockView" class="p-8 flex flex-col items-center justify-center text-center space-y-5 my-6">
+        <div class="w-16 h-16 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center shadow-inner shadow-indigo-100">
+          <i data-lucide="lock" class="w-8 h-8"></i>
+        </div>
+        <div>
+          <h2 class="text-xl font-extrabold text-slate-800">ยืนยันตัวตนผู้ดูแลระบบ</h2>
+          <p class="text-xs sm:text-sm text-slate-400 mt-1 max-w-sm">เฉพาะแอดมินเท่านั้นที่จะสามารถจัดส่งแจ้งเตือนด่วน หรือจัดการตารางสอบส่วนกลางได้</p>
+        </div>
+
+        <div class="w-full max-w-xs space-y-3">
+          <div class="relative">
+            <input id="adminPassInput" type="password" placeholder="รหัสผ่านแอดมิน (เริ่มต้นคือ 1234)" class="focus-ring w-full text-center tracking-widest rounded-2xl border border-indigo-100 bg-indigo-50/50 px-4 py-3.5 outline-none font-bold text-slate-700 placeholder:tracking-normal placeholder:font-normal placeholder:text-slate-400">
+          </div>
+          <button id="verifyAdminBtn" class="canva-button w-full focus-ring px-5 py-3.5 rounded-2xl font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-md shadow-indigo-100 transition" type="button">
+            เข้าสู่ระบบแอดมิน
+          </button>
+        </div>
+        <p id="adminLockError" class="text-xs text-rose-500 font-semibold hidden">❌ รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง</p>
+      </div>
+
+      <!-- 2. Admin Dashboard View (Unlocked) -->
+      <div id="adminConsoleView" class="hidden flex flex-col flex-1 overflow-hidden bg-white">
+        <!-- Dashboard Header -->
+        <div class="px-6 py-5 border-b border-indigo-50 bg-indigo-50/20 flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="font-extrabold text-lg sm:text-xl text-indigo-950">แผงควบคุมแอดมิน</h2>
+            <p class="text-[11px] sm:text-xs text-indigo-600 font-medium my-0">จัดการกำหนดการแจ้งเตือนด่วนและสมาชิกห้องเรียน</p>
+          </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="p-6 space-y-6 overflow-y-auto flex-1 bg-slate-50/35">
+          <!-- Section 1: Exam Alert Broadcaster -->
+          <div class="bg-white rounded-2xl border border-slate-100 p-5 space-y-4 shadow-sm">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse"></span>
+                <span class="text-xs sm:text-sm font-bold text-slate-800">1. เลือกนัดสอบเพื่อเตือนเพื่อนๆ</span>
+              </div>
+              <button id="adminSelectAllExams" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition" type="button">เลือกทั้งหมด</button>
+            </div>
+
+            <!-- List of Exam Schedule elements in Firebase -->
+            <div id="adminExamList" class="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+              <!-- Rendered programmatically -->
+              <p class="text-xs text-slate-400 text-center py-4 font-sans">กำลังดึงตารางสอบทั้งหมดจากระบบคลาวด์...</p>
+            </div>
+            
+            <!-- Custom Admin Message input -->
+            <div class="space-y-1.5 pt-1">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wide">💬 ข้อความด่วนฝากถึงเพื่อน (จะแนบไปในจดหมายข่าว):</label>
+              <textarea id="adminCustomMsg" placeholder="เช่น ทวนฟิสิกส์บทที่ 3-4 เพิ่มเติมด้วยนะ, มีชีทแจกแล้วใต้ตึกเรียน ฯลฯ" rows="2" class="focus-ring w-full text-xs sm:text-sm rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none resize-none text-slate-700"></textarea>
+            </div>
+
+            <!-- Send mail button -->
+            <button id="adminBroadcastBtn" class="canva-button w-full focus-ring px-5 py-3 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-100/70 transition flex items-center justify-center gap-2" type="button">
+              <span id="adminBroadcastSpinner" class="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin hidden"></span>
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span>ส่งอีเมลแจ้งเตือนสอบและรายละเอียดเพื่อนๆ ทันที 📢</span>
+            </button>
+          </div>
+
+          <!-- Section 2: Manage Classmate Registered Emails -->
+          <div class="bg-white rounded-2xl border border-slate-100 p-5 space-y-3.5 shadow-sm">
+            <div class="flex items-center gap-2">
+              <i data-lucide="users" class="w-4.5 h-4.5 text-indigo-600"></i>
+              <span class="text-sm font-bold text-slate-800">2. รายชื่ออีเมลเพื่อนในกลุ่ม (<span id="adminSubCount">0</span> คน)</span>
+            </div>
+            
+            <!-- Admin Add Subscriber Input and Button -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <input id="adminAddSubEmailInput" type="email" placeholder="กรอกอีเมลเพื่อเพิ่มเพื่อน (เช่น friend@domain.com)" class="focus-ring flex-1 text-xs sm:text-sm rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none text-slate-700">
+              <button id="adminAddSubEmailBtn" class="canva-button focus-ring px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 transition shrink-0 inline-flex items-center justify-center gap-1.5" type="button">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                <span>เพิ่มเมล</span>
+              </button>
+            </div>
+
+            <div id="adminSubscriberList" class="space-y-2 max-h-36 overflow-y-auto pr-1">
+              <!-- Rendered dynamically -->
+              <p class="text-xs text-slate-400 text-center py-2">ยังไม่มีเพื่อนร่วมชั้นลงทะเบียน</p>
+            </div>
+          </div>
+
+          <!-- Section 3: Change Passcode -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="space-y-0.5 w-full sm:w-auto">
+              <div class="flex items-center gap-2">
+                <i data-lucide="key-round" class="w-4.5 h-4.5 text-indigo-600"></i>
+                <span class="text-sm font-bold text-slate-800">3. เปลี่ยนรหัสผ่านแอดมิน</span>
+              </div>
+              <p class="text-xs text-slate-400 font-sans">กำหนดรหัสผ่านใหม่เพื่อความปลอดภัยในการเข้าใช้งานส่วนนี้</p>
+            </div>
+            <div class="flex items-center gap-2 w-full sm:w-auto p-0 m-0">
+              <input id="newAdminPassInput" type="text" placeholder="รหัสใหม่ (เช่น 1234)" class="focus-ring w-full sm:w-36 text-sm rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none text-slate-700">
+              <button id="saveAdminPassBtn" class="canva-button focus-ring px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 text-white hover:bg-slate-900 transition shrink-0" type="button">บันทึกรหัสใหม่</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Logout / Footer Area -->
+        <div class="px-6 py-4 border-t border-indigo-50 bg-indigo-50/20 flex items-center justify-between">
+          <button id="adminLogoutBtn" class="focus-ring inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:text-rose-800 transition" type="button">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+            <span>ออกระบบแอดมิน</span>
+          </button>
+          <p class="text-[10px] text-slate-400">ระบบแอดมินผู้ดูแลสรุปการบ้าน v2.0</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast hidden-toast fixed right-4 bottom-4 z-50 rounded-2xl bg-slate-900 text-white px-5 py-3.5 text-sm shadow-2xl flex items-center gap-2"></div>
 
   <!-- Dynamic Javascript Module integrating Firebase SDK 11 & fixes -->
@@ -639,8 +762,24 @@
             });
           }
           renderSubscriptionState();
+          if (typeof renderAdminDashboard === 'function' && state.isAdminVerified && adminModal && !adminModal.classList.contains('hidden')) {
+            renderAdminDashboard();
+          }
         }, (error) => {
           console.error("Firebase subscription synchronization error: ", error);
+        });
+
+        // Listen live to dynamic admin password node on Firebase
+        const passRef = ref(db, 'system/adminPasscode');
+        onValue(passRef, (snapshot) => {
+          if (snapshot.exists()) {
+            state.adminPasscode = String(snapshot.val()).trim();
+          } else {
+            state.adminPasscode = "1234"; // Default passcode for initial setup
+            set(passRef, "1234");
+          }
+        }, (error) => {
+          console.error("Firebase adminPasscode fetch error: ", error);
         });
       } catch (err) {
         console.error("Firebase initialize err: ", err);
@@ -1505,7 +1644,313 @@
       }
     }
 
+    // Admin Panel logic and handlers
+    state.isAdminVerified = false;
+    state.adminPasscode = "1234";
+
+    const adminModal = document.getElementById('adminModal');
+    const openAdminBtn = document.getElementById('openAdminBtn');
+    const closeAdminModalBtn = document.getElementById('closeAdminModalBtn');
+    const modalBackdropAdmin = document.getElementById('modalBackdropAdmin');
+    const verifyAdminBtn = document.getElementById('verifyAdminBtn');
+    const adminPassInput = document.getElementById('adminPassInput');
+    const adminLockError = document.getElementById('adminLockError');
+    const adminLockView = document.getElementById('adminLockView');
+    const adminConsoleView = document.getElementById('adminConsoleView');
+    const adminExamList = document.getElementById('adminExamList');
+    const adminCustomMsg = document.getElementById('adminCustomMsg');
+    const adminBroadcastBtn = document.getElementById('adminBroadcastBtn');
+    const adminSubscriberList = document.getElementById('adminSubscriberList');
+    const adminSubCount = document.getElementById('adminSubCount');
+    const newAdminPassInput = document.getElementById('newAdminPassInput');
+    const saveAdminPassBtn = document.getElementById('saveAdminPassBtn');
+    const adminLogoutBtn = document.getElementById('adminLogoutBtn');
+    const adminSelectAllExams = document.getElementById('adminSelectAllExams');
+    const adminAddSubEmailInput = document.getElementById('adminAddSubEmailInput');
+    const adminAddSubEmailBtn = document.getElementById('adminAddSubEmailBtn');
+
+    function openAdminModal() {
+      adminModal.classList.remove('hidden');
+      adminModal.classList.add('flex');
+      
+      if (state.isAdminVerified) {
+        adminLockView.classList.add('hidden');
+        adminConsoleView.classList.remove('hidden');
+        renderAdminDashboard();
+      } else {
+        adminLockView.classList.remove('hidden');
+        adminConsoleView.classList.add('hidden');
+        adminPassInput.value = '';
+        adminLockError.classList.add('hidden');
+      }
+    }
+
+    function closeAdminModal() {
+      adminModal.classList.add('hidden');
+      adminModal.classList.remove('flex');
+    }
+
+    function verifyAdminPassword() {
+      const entered = adminPassInput.value.trim();
+      if (entered === state.adminPasscode) {
+        state.isAdminVerified = true;
+        adminLockView.classList.add('hidden');
+        adminConsoleView.classList.remove('hidden');
+        adminLockError.classList.add('hidden');
+        renderAdminDashboard();
+        showToast('🔓 เข้าสู่ระบบแอดมินสำเร็จ');
+      } else {
+        adminLockError.classList.remove('hidden');
+        adminPassInput.focus();
+      }
+    }
+
+    function renderAdminDashboard() {
+      if (!state.isAdminVerified) return;
+
+      // Update Subscriber list
+      adminSubCount.textContent = state.subscriptions.length;
+      if (state.subscriptions.length === 0) {
+        adminSubscriberList.innerHTML = `<p class="text-xs text-slate-400 text-center py-2 font-sans">ยังไม่มีเพื่อนร่วมชั้นลงทะเบียนติดตาม</p>`;
+      } else {
+        adminSubscriberList.innerHTML = state.subscriptions.map(sub => {
+          const joinedDate = sub.created_at ? new Date(sub.created_at).toLocaleDateString("th-TH") : "ไม่ระบุปี";
+          return `
+            <div class="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-2 text-xs sm:text-sm">
+              <div class="flex flex-col">
+                <span class="font-semibold text-slate-700 font-mono">${sub.email}</span>
+                <span class="text-[10px] text-slate-400 font-sans">ลงทะเบียนเมื่อ: ${joinedDate}</span>
+              </div>
+              <button class="delete-sub-btn text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded-lg transition" data-id="${sub.__backendId}">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Render exams
+      const exams = state.records.filter(r => r.type === 'exam');
+      if (exams.length === 0) {
+        adminExamList.innerHTML = `<p class="text-xs text-slate-400 text-center py-4 font-sans">ไม่มีตารางสอบระบุในระบบ (สามารถเพิ่มวิชาประเภท "ปฏิทินและจัดสอบ" ด่วนได้)</p>`;
+      } else {
+        adminExamList.innerHTML = exams.map(ex => {
+          const today = startOfDay(new Date());
+          const due = ex.due_date ? startOfDay(new Date(ex.due_date)) : null;
+          const diffDays = due ? Math.round((due - today) / 86400000) : -1;
+          const daysLeftText = diffDays === 0
+            ? "สอบวันนี้แล้ว! ⚠️"
+            : diffDays < 0
+              ? `สอบผ่านแล้วเมื่อ ${Math.abs(diffDays)} วันก่อน`
+              : `ในอีก ${diffDays} วัน`;
+
+          const formattedDate = ex.due_date
+            ? new Date(ex.due_date).toLocaleDateString("th-TH", {
+                day: "numeric",
+                month: "short"
+              })
+            : "ไม่ระบุวัน";
+
+          return `
+            <label class="flex items-start gap-3 bg-slate-50 border border-slate-100 p-3 rounded-xl hover:bg-slate-100/50 cursor-pointer transition select-none">
+              <input type="checkbox" class="admin-exam-select mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer" data-id="${ex.__backendId}" checked>
+              <div class="flex-1 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-slate-700 text-xs sm:text-sm font-sans">${ex.title}</span>
+                  <span class="font-bold text-indigo-600 text-[10px] sm:text-xs font-sans">${daysLeftText}</span>
+                </div>
+                <div class="text-slate-500 mt-0.5 font-sans">
+                  วิชา: <span class="text-slate-700 font-semibold">${ex.subject || "ไม่ระบุ"}</span> 
+                  ${ex.teacher ? `| ผู้คุมสอบ: <span class="text-slate-700">${ex.teacher}</span>` : ""}
+                  | วันสอบ: <span class="text-slate-700 font-bold">${formattedDate}</span>
+                </div>
+              </div>
+            </label>
+          `;
+        }).join('');
+      }
+
+      // Re-render SVG icons via lucide
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+
+      // Add delete buttons triggers
+      document.querySelectorAll('.delete-sub-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const btnElem = e.currentTarget;
+          const subId = btnElem.getAttribute('data-id');
+          if (confirm('ยืนยันลบอีเมลผู้สมัครติดตามร่วมชั้นคนนี้หรือไม่? เจ้าตัวจะไม่ได้รับอีเมลประกาศจากแอดมินอีก')) {
+            try {
+              await remove(ref(db, 'subscriptions/' + subId));
+              showToast('🗑️ ลบรายชื่อผู้สมัครรับข่าวสำเร็จ');
+            } catch (err) {
+              console.error(err);
+              showToast('ไม่สามารถลบอีเมลจากระบบคลาวด์ได้');
+            }
+          }
+        });
+      });
+    }
+
+    async function handleAdminBroadcast() {
+      const selectedCheckboxes = document.querySelectorAll('.admin-exam-select:checked');
+      if (selectedCheckboxes.length === 0) {
+        showToast('⚠️ กรุณาเลือกกำหนดการสอบที่ต้องการแจ้งเตือนอย่างน้อย 1 รายการ');
+        return;
+      }
+
+      const examIds = Array.from(selectedCheckboxes).map(cb => cb.getAttribute('data-id'));
+      const examsToNotify = state.records.filter(r => examIds.includes(r.__backendId)).map(r => {
+        const today = startOfDay(new Date());
+        const due = r.due_date ? startOfDay(new Date(r.due_date)) : null;
+        const diffDays = due ? Math.round((due - today) / 86400000) : -1;
+        return {
+          title: r.title,
+          subject: r.subject,
+          due_date: r.due_date,
+          teacher: r.teacher,
+          daysLeft: diffDays
+        };
+      });
+
+      const customMessage = adminCustomMsg.value.trim();
+
+      const enrolledEmails = state.subscriptions.map(s => s.email).filter(Boolean);
+      const notifyRecipients = ["natchakorn2552@gmail.com", ...enrolledEmails];
+
+      const spinner = document.getElementById('adminBroadcastSpinner');
+      const broadcastBtn = document.getElementById('adminBroadcastBtn');
+
+      broadcastBtn.disabled = true;
+      spinner.classList.remove('hidden');
+
+      try {
+        const response = await fetch('/api/notify-exams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            exams: examsToNotify,
+            recipients: notifyRecipients,
+            customMessage: customMessage
+          })
+        });
+
+        const res = await response.json();
+        if (res.status === 'success' || res.status === 'partial_success' || res.simulated) {
+          showToast(res.simulated ? '🚀 จำลองส่งประกาศตารางสอบไปยังห้องสำเร็จ!' : '📢 ส่งอีเมลตารางสอบถึงเพื่อนๆ ทุกคนเรียบร้อยแล้ว!');
+          adminCustomMsg.value = '';
+          closeAdminModal();
+        } else {
+          showToast('❌ ระบบเซิร์ฟเวอร์แจ้งผิดพลาด กรุณาลองใหม่อีกครั้ง');
+        }
+      } catch (err) {
+        console.error("Broadcast error: ", err);
+        showToast('❌ เกิดข้อผิดพลาดทางเทคนิคในการส่งเมลข่าว');
+      } finally {
+        broadcastBtn.disabled = false;
+        spinner.classList.add('hidden');
+      }
+    }
+
+    async function changeAdminPasscode() {
+      const newPass = newAdminPassInput.value.trim();
+      if (!newPass) {
+        showToast('กรุณากำหนดรหัสผ่านที่ไม่เว้นว่าง');
+        return;
+      }
+      try {
+        await set(ref(db, 'system/adminPasscode'), newPass);
+        state.adminPasscode = newPass;
+        newAdminPassInput.value = '';
+        showToast('🔑 เปลี่ยนรหัสผ่านแอดมินและบันทึกคลาวด์สำเร็จ!');
+      } catch (err) {
+        console.error(err);
+        showToast('ไม่สามารถเปลี่ยนรหัสผ่านได้ในขณะนี้');
+      }
+    }
+
+    function handleAdminLogout() {
+      state.isAdminVerified = false;
+      showToast('🔒 ออกจากระบบแอดมินเรียบร้อย');
+      openAdminModal();
+    }
+
+    function setupSelectAllExams() {
+      const cbxs = document.querySelectorAll('.admin-exam-select');
+      const allChecked = Array.from(cbxs).every(c => c.checked);
+      cbxs.forEach(c => c.checked = !allChecked);
+    }
+
+    async function handleAdminAddSubscriber() {
+      if (!state.isAdminVerified) return;
+
+      const email = adminAddSubEmailInput.value.trim().toLowerCase();
+      if (!email) {
+        showToast('กรุณากรอกอีเมลก่อนทำการเพิ่ม');
+        return;
+      }
+
+      const emailFilter = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+      if (!emailFilter.test(email)) {
+        showToast('รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง');
+        return;
+      }
+
+      // Check if this classmate's email is already registered
+      const alreadySubscribed = state.subscriptions.some(s => s.email && s.email.toLowerCase() === email);
+      if (alreadySubscribed) {
+        showToast('⚠️ อีเมลนี้ลงทะเบียนในระบบอยู่แล้ว');
+        return;
+      }
+
+      adminAddSubEmailBtn.disabled = true;
+      try {
+        const pushRef = push(ref(db, 'subscriptions'));
+        await set(pushRef, {
+          email: email,
+          userId: 'admin-added-' + Math.random().toString(36).substr(2, 9),
+          created_at: new Date().toISOString()
+        });
+        adminAddSubEmailInput.value = '';
+        showToast(`✅ เพิ่มอีเมล "${email}" ในระบบติดตามเรียบร้อยแล้ว!`);
+      } catch (err) {
+        console.error("Admin subscriber addition error: ", err);
+        showToast('ไม่สามารถเพิ่มอีเมลได้ในขณะนี้');
+      } finally {
+        adminAddSubEmailBtn.disabled = false;
+      }
+    }
+
+    // Bind real data changes to automatically refresh our Admin Panel items concurrently if open
+    const originalOnDataChanged = dataHandler.onDataChanged;
+    dataHandler.onDataChanged = function(records) {
+      originalOnDataChanged(records);
+      if (adminModal && !adminModal.classList.contains('hidden') && state.isAdminVerified) {
+        renderAdminDashboard();
+      }
+    };
+
     // Set up elements event listener triggers
+    openAdminBtn.addEventListener('click', openAdminModal);
+    closeAdminModalBtn.addEventListener('click', closeAdminModal);
+    modalBackdropAdmin.addEventListener('click', closeAdminModal);
+    verifyAdminBtn.addEventListener('click', verifyAdminPassword);
+    adminPassInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') verifyAdminPassword();
+    });
+    adminBroadcastBtn.addEventListener('click', handleAdminBroadcast);
+    saveAdminPassBtn.addEventListener('click', changeAdminPasscode);
+    newAdminPassInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') changeAdminPasscode();
+    });
+    adminLogoutBtn.addEventListener('click', handleAdminLogout);
+    adminSelectAllExams.addEventListener('click', setupSelectAllExams);
+    adminAddSubEmailBtn.addEventListener('click', handleAdminAddSubscriber);
+    adminAddSubEmailInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleAdminAddSubscriber();
+    });
+
     document.getElementById('openModalBtn').addEventListener('click', openAddModal);
     document.getElementById('closeModalBtn').addEventListener('click', closeModal);
     document.getElementById('cancelBtn').addEventListener('click', closeModal);
@@ -1588,77 +2033,6 @@
     document.getElementById('nextWeekBtn').addEventListener('click', () => {
       state.selectedDate.setDate(state.selectedDate.getDate() + 7);
       renderAll();
-    });
-
-    document.getElementById('upcomingNotifyBtn').addEventListener('click', async () => {
-      const btn = document.getElementById('upcomingNotifyBtn');
-      const spinner = document.getElementById('upcomingNotifySpinner');
-      if (!btn) return;
-
-      btn.disabled = true;
-      if (spinner) spinner.classList.remove('hidden');
-
-      const today = startOfDay(new Date());
-
-      // Get all uncompleted duties due in 0 to 3 days (today is 0)
-      const upcoming = state.records.filter(r => {
-        if (!r.due_date) return false;
-        if (isCompletedByUser(r)) return false;
-        
-        const due = startOfDay(new Date(r.due_date));
-        const diff = Math.round((due - today) / 86400000);
-        return diff >= 0 && diff <= 3;
-      }).map(r => {
-        const due = startOfDay(new Date(r.due_date));
-        const diff = Math.round((due - today) / 86400000);
-        return {
-          title: r.title,
-          subject: r.subject,
-          due_date: r.due_date,
-          type: r.type || 'homework',
-          daysLeft: diff,
-          teacher: r.teacher
-        };
-      });
-
-      if (upcoming.length === 0) {
-        showToast('ไม่มีงานใกล้ส่งขณะนี้');
-        btn.disabled = false;
-        if (spinner) spinner.classList.add('hidden');
-        return;
-      }
-
-      // Extract classmate emails & my email
-      const enrolledEmails = state.subscriptions.map(s => s.email).filter(Boolean);
-      const notifyRecipients = ["natchakorn2552@gmail.com", ...enrolledEmails];
-
-      try {
-        const response = await fetch("/api/notify-upcoming", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            upcomingDuties: upcoming,
-            recipients: notifyRecipients
-          })
-        });
-        const res = await response.json();
-        console.log("Upcoming alert email backend result:", res);
-        if (res.simulated) {
-          showToast(res.message);
-        } else if (res.status === "success" || res.status === "partial_success") {
-          showToast(`📢 ส่งจดหมายแจ้งเตือนกำหนดส่งถึงเพื่อนร่วมวิชารวม ${notifyRecipients.length} คนเป็นที่เรียบร้อยแล้ว!`);
-        } else {
-          showToast(res.message || 'ส่งจดหมายล้มเหลว กรุณาตั้งค่า SMTP');
-        }
-      } catch (err) {
-        console.error("Failed to post upcoming summary alert API:", err);
-        showToast("⚠️ ระบบส่งแจ้งเตือนผิดพลาดทางเครือข่าย");
-      } finally {
-        btn.disabled = false;
-        if (spinner) spinner.classList.add('hidden');
-      }
     });
 
     modal.addEventListener('click', (e) => {

@@ -339,6 +339,177 @@ async function startServer() {
     }
   });
 
+  // API Route to broadcast Exam alerts triggered by Admin Panel
+  app.post("/api/notify-exams", async (req, res) => {
+    const { exams, recipients, customMessage } = req.body;
+
+    const emailsToSend: string[] = Array.isArray(recipients) && recipients.length > 0
+      ? [...new Set(recipients.map(r => String(r).trim()).filter(Boolean))]
+      : ["natchakorn2552@gmail.com"];
+
+    const appUrl = process.env.APP_URL || "https://ai.studio/build";
+    const smtpHost = process.env.SMTP_HOST;
+    const smtpUser = process.env.SMTP_USER;
+    const smtpPass = process.env.SMTP_PASS;
+
+    // Format list of exams
+    let examsHtml = "";
+    if (Array.isArray(exams) && exams.length > 0) {
+      exams.forEach((exam) => {
+        const formattedDate = exam.due_date
+          ? new Date(exam.due_date).toLocaleDateString("th-TH", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+              weekday: "long",
+              timeZone: "Asia/Bangkok",
+            })
+          : "ไม่ระบุวันสอบ";
+
+        const daysLeftText = exam.daysLeft === 0 
+          ? "สอบวันนี้แล้ว! ⚠️" 
+          : exam.daysLeft < 0 
+            ? "ผ่านกำหนดสอบแล้ว" 
+            : `จะสอบในอีก ${exam.daysLeft} วัน ⏰`;
+
+        examsHtml += `
+          <div style="background-color: #faf8ff; border: 1px solid #e0d5ff; border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.05);">
+            <div style="border-bottom: 1px solid #eedfff; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 11px; font-weight: bold; color: #6366f1; background-color: #eef2ff; padding: 4px 12px; border-radius: 99px; text-transform: uppercase;">📅 ตารางสอบสำคัญ</span>
+              <span style="font-size: 11px; font-weight: bold; color: #4338ca; margin-left: 10px;">${daysLeftText}</span>
+            </div>
+            <h3 style="margin: 0 0 8px 0; font-size: 17px; color: #312e81; font-weight: 800; line-height: 1.4;">${exam.title || "ไม่ระบุวิชา/หัวข้อ"}</h3>
+            <p style="margin: 0 0 8px 0; font-size: 14px; color: #4f46e5;">
+              <strong>วิชา:</strong> ${exam.subject || "ไม่ระบุวิชา"} ${exam.teacher ? `| <strong>ครูผู้สอน:</strong> ${exam.teacher}` : ""}
+            </p>
+            <p style="margin: 0; font-size: 14px; color: #4338ca; font-weight: bold;">
+              📍 วันจัดสอบ: ${formattedDate}
+            </p>
+          </div>
+        `;
+      });
+    } else {
+      examsHtml = `<p style="text-align: center; color: #64748b; font-size: 14px; padding: 20px;">ไม่มีข้อมูลการสอบที่ระบุ</p>`;
+    }
+
+    const htmlContent = `
+      <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f5f3ff; padding: 40px 20px; color: #1e1b4b; line-height: 1.6;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 28px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(99,102,241,0.1), 0 10px 10px -5px rgba(99,102,241,0.04); border: 2px solid #ddd6fe;">
+          
+          <!-- Banner header purple -->
+          <div style="background: linear-gradient(135deg, #6366f1, #4f46e5); padding: 40px 30px; text-align: center; color: white;">
+            <div style="font-size: 38px; margin-bottom: 12px;">📢</div>
+            <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; opacity: 0.9; margin-bottom: 6px;">
+              แจ้งเตือนตารางสอบด่วนจากแอดมิน!
+            </div>
+            <h1 style="font-size: 24px; margin: 0; font-weight: 800; letter-spacing: -0.5px; line-height: 1.3;">
+              อัปเดตกำหนดการและนัดหมายการสอบสำคัญ
+            </h1>
+          </div>
+          
+          <!-- Body Content -->
+          <div style="padding: 35px;">
+            ${customMessage ? `
+              <!-- Admin Note -->
+              <div style="background-color: #fef08a; border-left: 4px solid #eab308; padding: 16px 20px; border-radius: 12px; margin-bottom: 25px;">
+                <p style="margin: 0 0 4px 0; font-size: 12px; font-weight: bold; color: #854d0e; text-transform: uppercase; letter-spacing: 0.5px;">💬 ข้อความฝากถึงเพื่อนๆ โดยแอดมิน:</p>
+                <p style="margin: 0; font-size: 15px; color: #713f12; font-style: italic;">"${customMessage}"</p>
+              </div>
+            ` : ""}
+
+            <p style="margin-top: 0; font-size: 15px; color: #4b5563; text-align: center; margin-bottom: 24px;">
+              สวัสดีเพื่อนรักทางสถิติและการบ้าน! นี่เป็นรายชื่อข้อสอบที่มีตารางนัดหมายที่แอดมินส่งด่วนมาเพื่อย้ำเตือน:
+            </p>
+
+            <div style="margin: 20px 0;">
+              ${examsHtml}
+            </div>
+
+            <!-- CTA button links directly to our summary website -->
+            <div style="text-align: center; margin-top: 35px;">
+              <a href="${appUrl}" target="_blank" style="background-color: #6366f1; color: #ffffff; text-decoration: none; padding: 14px 32px; font-size: 15px; font-weight: bold; border-radius: 16px; display: inline-block; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);">
+                🔗 เข้าสู่เว็บเพื่อดูสรุปปฏิทินทั้งหมด
+              </a>
+            </div>
+          </div>
+
+          <!-- Footer Area -->
+          <div style="background-color: #fafaf9; border-top: 1px solid #f3f4f6; padding: 25px; text-align: center; font-size: 12px; color: #6b7280; line-height: 1.5;">
+            จดหมายด่วนฉบับนี้จัดตั้งโดยผู้ดูแลระบบสรุปการบ้าน<br>
+            อีเมลฉบับนี้ส่งไปยัง <strong>เพื่อนร่วมงานและผู้สมัครรับข้อมูลทั้งหมด ${emailsToSend.length} ท่าน</strong>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+    if (smtpHost && smtpUser && smtpPass && smtpUser !== "MY_EMAIL@gmail.com") {
+      const smtpPort = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 465;
+      const transporter = nodemailer.createTransport({
+        host: smtpHost,
+        port: smtpPort,
+        secure: smtpPort === 465,
+        auth: {
+          user: smtpUser,
+          pass: smtpPass,
+        },
+      });
+
+      try {
+        const sendPromises = emailsToSend.map(async (recipient) => {
+          const mailOptions = {
+            from: process.env.SMTP_FROM || `"ผู้ดูแลระบบ สรุปการบ้าน" <${smtpUser}>`,
+            to: recipient,
+            subject: `📢 [ด่วนที่สุด] แจ้งเหตุตารางสอบสำคัญจากระบบการเรียน: ${exams?.length || 0} รายการที่ต้องทบทวน`,
+            html: htmlContent,
+          };
+          await transporter.sendMail(mailOptions);
+          console.log(`[Exam Broadcast Email] Sent to: ${recipient}`);
+        });
+
+        await Promise.all(sendPromises);
+
+        return res.json({
+          status: "success",
+          delivered: true,
+          recipients: emailsToSend,
+          message: `ส่งประกาศเตือนจัดสอบไปยังผู้ติดตามรวม ${emailsToSend.length} คนเรียบร้อยแล้ว`,
+        });
+      } catch (error: any) {
+        console.error("[Email Error] Failed to send exam broadcast via SMTP:", error);
+        return res.json({
+          status: "partial_success",
+          delivered: false,
+          recipients: emailsToSend,
+          message: `ประกาศเตือนจัดสอบสำเร็จในระบบจำลอง แต่ SMTP มีข้อบกพร่อง: ${error?.message}`,
+        });
+      }
+    } else {
+      // Simulation on Console
+      console.log("\n========================================================");
+      console.log(`📨 SIMULATING ADMIN EXAM BROADCAST TO ${emailsToSend.length} CLASSMATES`);
+      emailsToSend.forEach((recipient, idx) => {
+        console.log(`[Recipient #${idx + 1}] To: ${recipient}`);
+      });
+      console.log(`Subject: 📢 [ด่วนที่สุด] แจ้งตารางจัดสอบสำคัญ: ${exams?.length || 0} รายการ`);
+      console.log(`Custom Note from Admin: "${customMessage || "(ไม่มี)"}"`);
+      if (Array.isArray(exams)) {
+        exams.forEach((ex, id) => {
+          console.log(` - Exam #${id + 1}: ${ex.title} (วิชา: ${ex.subject}, วันที่: ${ex.due_date})`);
+        });
+      }
+      console.log("========================================================\n");
+
+      return res.json({
+        status: "success",
+        delivered: false,
+        simulated: true,
+        recipients: emailsToSend,
+        message: `จำลองประกาศตารางสอบไปยัง ${emailsToSend.join(", ")} ใน Console เรียบร้อยแล้ว (กรุณาเชื่อมต่อ SMTP ใน Secrets เพื่องานจริง)`,
+      });
+    }
+  });
+
   // Vite development vs production layout configurations
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
